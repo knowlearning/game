@@ -6,22 +6,23 @@
   const CANVAS_HEIGHT = 600
 
   const myCanvas = ref(null)
-  const fps = ref(null)
+  const fps = ref(0)
+  const pointer = ref({ x: 0, y: 0 })
+  const keys = ref({})
 
   onMounted(() => {
     const canvas = myCanvas.value
-
     canvas.width = CANVAS_WIDTH
     canvas.height = CANVAS_HEIGHT
 
-    const context = canvas.getContext('2d')
-    const game = new Game(context, CANVAS_WIDTH, CANVAS_HEIGHT)
-
+    const game = new Game(canvas)
     game.initialize()
 
     const sampleGameMetrics = () => {
       fps.value = game.fps
-      setTimeout(sampleGameMetrics, 100)
+      pointer.value = game.input.pointer
+      keys.value = game.input.keys
+      setTimeout(sampleGameMetrics, 1000/60)
     }
 
     sampleGameMetrics()
@@ -32,6 +33,8 @@
   <canvas ref="myCanvas" />
   <pre>Game Data
 FPS: {{ fps.toFixed(1) }}
+Pointer: {{ pointer.x.toFixed(1) }}, {{ pointer.y.toFixed(1) }}
+Keys: {{ keys }}
 </pre>
 </template>
 

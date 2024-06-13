@@ -1,21 +1,24 @@
-const Objects = []
+import Input from './Input.js'
 
 export default class Game {
-  constructor(context, width, height) {
-    this.context = context
-    this.width = width
-    this.height = height
+  constructor(canvas) {
+    this.context = canvas.getContext('2d')
+    this.width = canvas.width
+    this.height = canvas.height
+    this.objects = []
+    this.input = new Input(canvas)
   }
 
   initialize() {
     let lastTimestamp = 0
+
     const animate = timestamp => {
       const dt = timestamp - lastTimestamp
       this.fps = 1000 / dt
       lastTimestamp = timestamp
 
-      Objects.forEach(object => object.update(dt))
-      Objects.forEach(object => object.draw())
+      this.objects.forEach(object => object.update(dt))
+      this.objects.forEach(object => object.draw())
 
       requestAnimationFrame(animate)
     }
