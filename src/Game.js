@@ -1,13 +1,12 @@
 import Input from './Input.js'
 import Pen from './Pen.js'
+import Bug from './Bug.js'
 
 export default class Game {
   constructor(canvas) {
     this.canvas = canvas
     this.context = canvas.getContext('2d')
-    this.width = canvas.width
-    this.height = canvas.height
-    this.objects = [new Pen(this)]
+    this.objects = [new Pen(this), new Bug(this, this.randomPosition())]
     this.input = new Input(this)
   }
 
@@ -26,5 +25,12 @@ export default class Game {
       requestAnimationFrame(animate)
     }
     animate(0)
+  }
+
+  randomPosition() {
+    return {
+      x: Math.floor(Math.random() * this.canvas.width),
+      y: Math.floor(Math.random() * this.canvas.height)
+    }
   }
 }
