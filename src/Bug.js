@@ -7,7 +7,7 @@ export default class Bug {
     this.angle = Math.random() * Math.PI * 2
     this.width = 84
     this.height = 86
-    this.speed = 1
+    this.speed = Math.random() * 4 + 1
   }
   addPoint({ x, y }) {
     this.path.push({ x, y })
@@ -16,9 +16,7 @@ export default class Bug {
     const { position, angle, speed } = this
     position.x += Math.cos(angle) * speed
     position.y += Math.sin(angle) * speed
-    if (this.onEdge()) {
-      this.angle += Math.PI
-    }
+    this.handleCollideEdge()
   }
   draw() {
     const ctx = this.game.context
@@ -33,9 +31,15 @@ export default class Bug {
     )
     ctx.restore()
   }
-  onEdge() {
+  handleCollideEdge() {
+    //  TODO: handle collisions in a more composable way
     const { canvas: { width, height } } = this.game
     const { x, y } = this.position
-    return x < 0 || y < 0 || y > height || x > width
+    if (x < 0 || x > width) {
+      this.angle = Math.PI - this.angle
+    }
+    if (y < 0 || y > height) {
+      this.angle = - this.angle
+    }
   }
 }
