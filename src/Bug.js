@@ -31,6 +31,7 @@ export default class Bug {
     )
     ctx.restore()
   }
+  collide(target, angle) {}
   handleCollideEdge() {
     //  TODO: handle collisions in a more composable way
     const { canvas: { width, height } } = this.game
