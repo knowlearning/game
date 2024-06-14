@@ -4,6 +4,7 @@
 
   const CANVAS_WIDTH = 800
   const CANVAS_HEIGHT = 600
+  const METRICS_SAMPLE_RATE = 100
 
   const myCanvas = ref(null)
   const fps = ref(0)
@@ -22,7 +23,7 @@
       fps.value = game.fps
       pointer.value = game.input.pointer
       keys.value = game.input.keys
-      setTimeout(sampleGameMetrics, 1000/60)
+      setTimeout(sampleGameMetrics, METRICS_SAMPLE_RATE)
     }
 
     sampleGameMetrics()

@@ -1,11 +1,11 @@
 export default class Input {
-  constructor(canvas) {
+  constructor(game) {
     this.keys = {}
     this.pointer = { x: 0, y: 0 }
 
-    canvas.addEventListener('contextmenu', event => event.preventDefault())
+    game.canvas.addEventListener('contextmenu', event => event.preventDefault())
 
-    canvas.addEventListener('mousedown', event => {
+    game.canvas.addEventListener('mousedown', event => {
       switch (event.which) {
         case 1:
           this.keys['mouseleft'] = true
@@ -18,9 +18,9 @@ export default class Input {
           event.preventDefault()
           break
       }
-   }, false)
+    }, false)
 
-    canvas.addEventListener('mouseup', event => {
+    game.canvas.addEventListener('mouseup', event => {
       switch (event.which) {
         case 1:
           delete this.keys['mouseleft']
@@ -30,13 +30,12 @@ export default class Input {
           break
         case 3:
           delete this.keys['mouseright']
-          event.preventDefault()
           break
       }
     }, false)
 
-    canvas.addEventListener('mousemove', event => {
-      const { top, left } = canvas.getBoundingClientRect()
+    game.canvas.addEventListener('mousemove', event => {
+      const { top, left } = game.canvas.getBoundingClientRect()
       const { pointer } = this
       pointer.x = event.x - left
       pointer.y = event.y - top
