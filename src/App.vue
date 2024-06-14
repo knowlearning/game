@@ -32,8 +32,7 @@
 
 <template>
   <canvas ref="myCanvas" />
-  <pre>Game Data
-FPS: {{ fps.toFixed(1) }}
+  <pre>FPS: {{ fps.toFixed(1) }}
 Pointer: {{ pointer.x.toFixed(1) }}, {{ pointer.y.toFixed(1) }}
 Keys: {{ keys }}
 </pre>
@@ -43,10 +42,10 @@ Keys: {{ keys }}
   canvas {
     width: 800px;
     height: 600px;
-    border: 5px solid black;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    background: palegoldenrod;
   }
 </style>
