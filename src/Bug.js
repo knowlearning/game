@@ -8,14 +8,14 @@ export default class Bug {
     this.width = 84
     this.height = 86
     this.speed = Math.random() * 4 + 1
-  }
-  addPoint({ x, y }) {
-    this.path.push({ x, y })
+    this.hitbox = { x:0, y:0, r: 32 }
   }
   update() {
-    const { position, angle, speed } = this
+    const { position, angle, speed, hitbox } = this
     position.x += Math.cos(angle) * speed
     position.y += Math.sin(angle) * speed
+    hitbox.x = position.x
+    hitbox.y = position.y
     this.handleCollideEdge()
   }
   draw() {
