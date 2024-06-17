@@ -16,7 +16,6 @@ export default class Bug {
     position.y += Math.sin(angle) * speed
     hitbox.x = position.x
     hitbox.y = position.y
-    this.handleCollideEdge()
   }
   draw() {
     const ctx = this.game.context
@@ -31,16 +30,7 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(target, angle) {}
-  handleCollideEdge() {
-    //  TODO: handle collisions in a more composable way
-    const { canvas: { width, height } } = this.game
-    const { x, y } = this.position
-    if (x < 0 || x > width) {
-      this.angle = Math.PI - this.angle
-    }
-    if (y < 0 || y > height) {
-      this.angle = - this.angle
-    }
+  collide(target, angle) {
+    this.angle += Math.PI
   }
 }
