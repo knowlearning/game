@@ -3,29 +3,36 @@ import Pen from './Pen.js'
 import Bug from './Bug.js'
 import Line from './Line.js'
 import collisions from './collisions.js'
+import Rapier from '@dimforge/rapier2d-compat'
 
 export default class Game {
   constructor(canvas) {
     this.canvas = canvas
     this.context = canvas.getContext('2d')
     const { width, height } = canvas
-    const p00 = { x: 0, y: 0 }
-    const p10 = { x: width, y: 0 }
-    const p01 = { x: 0, y: height }
-    const p11 = { x: width, y: height }
-    this.objects = [
-      new Line(this, p00, p10), // top edge
-      new Line(this, p01, p11), // bottom edge
-      new Line(this, p00, p01), // left edge
-      new Line(this, p10, p11), // right edge
-      new Pen(this),
-      new Bug(this, this.randomPosition()),
-    ]
+    this.objects = []
     this.input = new Input(this)
   }
 
-  initialize() {
+  async initialize() {
     let lastTimestamp = 0
+
+    await Rapier.init()
+
+    const gravity = { x: 0, y: 0 }
+    this.physics = new Rapier.World(gravity)
+
+    const topLeft = { x: 0, y: 0 }
+    const topRight = { x: this.canvas.width, y: 0 }
+    const bottomLeft = { x: 0, y: this.canvas.height }
+    const bottomRight = { x: this.canvas.width, y: this.canvas.height }
+
+    this.addObject(new Line(this, topLeft, topRight))
+    this.addObject(new Line(this, topRight, bottomRight))
+    this.addObject(new Line(this, topLeft, bottomLeft))
+    this.addObject(new Line(this, bottomLeft, bottomRight))
+    this.addObject(new Pen(this))
+    this.addObject(new Bug(this, this.randomPosition()))
 
     const animate = timestamp => {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
@@ -33,22 +40,21 @@ export default class Game {
       this.fps = 1000 / dt
       lastTimestamp = timestamp
 
+      this.physics.step()
       this.objects.forEach(object => object.update(dt))
-      this.objects.forEach((obj1, i) => {
-        for (let j=i+1; j<this.objects.length; j++) {
-          const obj2 = this.objects[j]
-          const collision = this.collide(obj1, obj2)
-          if (collision) {
-            obj1.collide({...collision, target: obj2})
-            obj2.collide({...collision, target: obj1})
-          }
-        }
-      })
       this.objects.forEach(object => object.draw())
+
+      this.physics.forEachCollider(
+        collider => drawCollider(collider, this.context)
+      )
 
       requestAnimationFrame(animate)
     }
     animate(0)
+  }
+
+  addObject(object) {
+    this.objects.push(object)
   }
 
   randomPosition() {
@@ -67,4 +73,27 @@ export default class Game {
 
     return collisions[collisionType](obj1.hitbox, obj2.hitbox)
   }
+}
+
+
+// Function to draw the collider
+function drawCollider(collider, ctx) {
+  const shape = collider.shape;
+
+  ctx.save();
+  ctx.beginPath();
+  if (shape.type === 0) {
+    const radius = shape.radius
+    const position = collider.translation()
+    ctx.arc(position.x, position.y, radius, 0, 2 * Math.PI)
+  } else if (shape.type === 1) {
+    const halfExtents = shape.halfExtents
+    const position = collider.translation()
+    ctx.rect(position.x - halfExtents.x, position.y - halfExtents.y, halfExtents.x * 2, halfExtents.y * 2)
+  }
+  else console.log('UNKNOWN SHAPE!', shape)
+  // Add more shape types if needed
+
+  ctx.stroke();
+  ctx.restore();
 }

@@ -1,11 +1,16 @@
+import Rapier from '@dimforge/rapier2d-compat'
+
 export default class Line {
   constructor(game, p1, p2) {
     this.game = game
     this.p1 = p1
     this.p2 = p2
-    this.hitbox = {
-        x1: p1.x, y1: p1.y,
-        x2: p2.x, y2: p2.y}
+
+    const rigidBodyDesc = Rapier.RigidBodyDesc.fixed().setTranslation((p1.x + p2.x)/2, (p1.y + p2.y)/2)
+    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
+
+    const colliderDesc = Rapier.ColliderDesc.cuboid(Math.abs(p1.x - p2.x) + 1, Math.abs(p1.y - p2.y) + 1)
+    this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
   }
   update() {}
   draw() {
@@ -16,7 +21,6 @@ export default class Line {
     ctx.stroke()
   }
   collide({ target }) {
-    const { hitbox } = target
     console.log('COLLIDED!!!!!!', target, this)
   }
 }

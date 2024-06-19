@@ -32,8 +32,8 @@
 
 <template>
   <canvas ref="myCanvas" />
-  <pre>FPS: {{ fps.toFixed(1) }}
-Pointer: {{ pointer.x.toFixed(1) }}, {{ pointer.y.toFixed(1) }}
+  <pre>FPS: {{ fps }}
+Pointer: {{ pointer.x }}, {{ pointer.y }}
 Keys: {{ keys }}
 </pre>
 </template>
