@@ -11,6 +11,8 @@ export default class Line {
 
     const colliderDesc = Rapier.ColliderDesc.cuboid(Math.abs(p1.x - p2.x) + 1, Math.abs(p1.y - p2.y) + 1)
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
+
+    this.physicsHandle = this.rigidBody.handle
   }
   update() {}
   draw() {
@@ -19,8 +21,5 @@ export default class Line {
     ctx.moveTo(this.p1.x, this.p1.y)
     ctx.lineTo(this.p2.x, this.p2.y)
     ctx.stroke()
-  }
-  collide({ target }) {
-    console.log('COLLIDED!!!!!!', target, this)
   }
 }

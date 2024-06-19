@@ -2,7 +2,6 @@ import Input from './Input.js'
 import Pen from './Pen.js'
 import Bug from './Bug.js'
 import Line from './Line.js'
-import collisions from './collisions.js'
 import Rapier from '@dimforge/rapier2d-compat'
 
 export default class Game {
@@ -12,6 +11,7 @@ export default class Game {
     const { width, height } = canvas
     this.objects = []
     this.input = new Input(this)
+    this.pyhsicsHandles = new Map()
   }
 
   async initialize() {
@@ -21,6 +21,7 @@ export default class Game {
 
     const gravity = { x: 0, y: 0 }
     this.physics = new Rapier.World(gravity)
+    this.physicsEventQueue = new Rapier.EventQueue(true)
 
     const topLeft = { x: 0, y: 0 }
     const topRight = { x: this.canvas.width, y: 0 }
@@ -40,7 +41,13 @@ export default class Game {
       this.fps = 1000 / dt
       lastTimestamp = timestamp
 
-      this.physics.step()
+      this.physics.step(this.physicsEventQueue)
+      this.physicsEventQueue.drainCollisionEvents((handle1, handle2, started) => {
+        const o1 = this.pyhsicsHandles.get(handle1)
+        const o2 = this.pyhsicsHandles.get(handle2)
+        if (o1.collide) o1.collide(o2, started)
+        if (o2.collide) o2.collide(o1, started)
+      })
       this.objects.forEach(object => object.update(dt))
       this.objects.forEach(object => object.draw())
 
@@ -54,6 +61,9 @@ export default class Game {
   }
 
   addObject(object) {
+    if (object.physicsHandle) {
+      this.pyhsicsHandles.set(object.physicsHandle, object)
+    }
     this.objects.push(object)
   }
 
@@ -63,18 +73,7 @@ export default class Game {
       y: Math.floor(Math.random() * this.canvas.height)
     }
   }
-
-  collide(obj1, obj2) {
-    if (!obj1.hitbox || !obj2.hitbox) return
-
-    const t1 = obj1.hitbox.r ? 'Circle' : 'Line'
-    const t2 = obj2.hitbox.r ? 'Circle' : 'Line'
-    const collisionType = [t1, t2].join('')
-
-    return collisions[collisionType](obj1.hitbox, obj2.hitbox)
-  }
 }
-
 
 // Function to draw the collider
 function drawCollider(collider, ctx) {

@@ -22,10 +22,13 @@ export default class Bug {
     this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
 
     const colliderDesc = Rapier.ColliderDesc.ball(42)
+    colliderDesc.setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
-
+    this.collider.setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
 
     this.rigidBody.setLinvel(this.velocity, true)
+
+    this.physicsHandle = this.rigidBody.handle
   }
   update() {
     this.position = this.rigidBody.translation()
@@ -44,7 +47,7 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(target, angle) {
-    this.angle += Math.PI
+  collide(object, started) {
+    console.log('BUG COLLIDED WITH OBJECT!', object, started)
   }
 }
