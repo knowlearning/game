@@ -29,11 +29,13 @@ export default class Game {
     const bottomRight = { x: this.canvas.width, y: this.canvas.height }
 
     this.addObject(new Line(this, topLeft, topRight))
+    //  TODO: investigate why the first added line does not trigger collisions...
+    this.addObject(new Line(this, topLeft, topRight))
     this.addObject(new Line(this, topRight, bottomRight))
     this.addObject(new Line(this, topLeft, bottomLeft))
     this.addObject(new Line(this, bottomLeft, bottomRight))
-    this.addObject(new Pen(this))
     this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Pen(this))
 
     const animate = timestamp => {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
@@ -42,6 +44,10 @@ export default class Game {
       lastTimestamp = timestamp
 
       this.physics.step(this.physicsEventQueue)
+      this.physicsEventQueue.drainContactForceEvents(event => {
+        let handle1 = event.collider1()
+        let handle2 = event.collider2()
+      })
       this.physicsEventQueue.drainCollisionEvents((handle1, handle2, started) => {
         const o1 = this.pyhsicsHandles.get(handle1)
         const o2 = this.pyhsicsHandles.get(handle2)

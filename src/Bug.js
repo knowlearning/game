@@ -10,7 +10,7 @@ export default class Bug {
     this.height = 86
 
     const angle = Math.random() * Math.PI * 2
-    const speed = Math.random() * 100 + 200
+    const speed = Math.random() * 100 + 400
     this.velocity = {
       x: Math.cos(angle) * speed,
       y: Math.sin(angle) * speed
@@ -21,10 +21,14 @@ export default class Bug {
     const rigidBodyDesc = Rapier.RigidBodyDesc.dynamic().setTranslation(x, y)
     this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
 
-    const colliderDesc = Rapier.ColliderDesc.ball(42)
-    colliderDesc.setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
+    const colliderDesc = (
+      Rapier
+        .ColliderDesc
+        .ball(42)
+        .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
+        .setRestitution(1)
+    )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
-    this.collider.setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
 
     this.rigidBody.setLinvel(this.velocity, true)
 
