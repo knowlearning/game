@@ -13,6 +13,8 @@ export default class Line {
       Rapier
         .ColliderDesc
         .cuboid(Math.abs(p1.x - p2.x)/2 + this.lineWidth/2, Math.abs(p1.y - p2.y)/2 + this.lineWidth/2)
+        .setFriction(0)
+        .setRestitution(1)
         .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
     )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)

@@ -10,7 +10,7 @@ export default class Bug {
     this.height = 86
 
     const angle = Math.random() * Math.PI * 2
-    const speed = Math.random() * 100 + 400
+    const speed = Math.random() * 100 + 100
     this.velocity = {
       x: Math.cos(angle) * speed,
       y: Math.sin(angle) * speed
@@ -26,6 +26,7 @@ export default class Bug {
         .ColliderDesc
         .ball(42)
         .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
+        .setFriction(0)
         .setRestitution(1)
     )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
