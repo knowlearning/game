@@ -37,6 +37,11 @@ export default class Game {
     this.addObject(new Line(this, topLeft, bottomLeft))
     this.addObject(new Line(this, bottomLeft, bottomRight))
     this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Bug(this, this.randomPosition()))
+    this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Pen(this))
 
     const animate = timestamp => {

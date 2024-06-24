@@ -10,10 +10,10 @@ export default class Bug {
     this.height = 86
 
     const angle = Math.random() * Math.PI * 2
-    const speed = Math.random() * 100 + 100
+    this.startSpeed = Math.random() * 100 + 100
     this.velocity = {
-      x: Math.cos(angle) * speed,
-      y: Math.sin(angle) * speed
+      x: Math.cos(angle) * this.startSpeed,
+      y: Math.sin(angle) * this.startSpeed
     }
 
     const { x, y } = position
@@ -38,6 +38,7 @@ export default class Bug {
   update() {
     this.position = this.rigidBody.translation()
     this.velocity = this.rigidBody.linvel()
+    clampVelocity(this.rigidBody, this.startSpeed)
   }
   draw() {
     const ctx = this.game.context
@@ -54,5 +55,21 @@ export default class Bug {
   }
   collide(object, started) {
     console.log('BUG COLLIDED WITH OBJECT!', object, started)
+  }
+}
+
+function clampVelocity(body, maxSpeed) {
+  const velocity = body.linvel()
+  const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+
+  if (speed > maxSpeed) {
+    const scale = maxSpeed / speed
+    const targetVelocity = { x: velocity.x * scale, y: velocity.y * scale }
+    const impulse = {
+      x: (targetVelocity.x - velocity.x) * body.mass(),
+      y: (targetVelocity.y - velocity.y) * body.mass()
+    }
+
+    body.applyImpulse(impulse, true)
   }
 }
