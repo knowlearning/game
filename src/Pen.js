@@ -22,7 +22,7 @@ class DrawState {
   constructor(pen) {
     this.pen = pen
     this.path = new Path(this.pen.game)
-    this.pen.game.objects.push(this.path)
+    this.pen.game.addObject(this.path)
     this.path.addPoint(this.pen.game.input.pointer)
   }
   update() {

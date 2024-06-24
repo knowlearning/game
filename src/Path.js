@@ -15,7 +15,6 @@ export default class Path {
 
     if (this.path.length > 1) {
       const [p1, p2] = this.path.slice(-2)
-      console.log(p1, p2)
       const colliderDesc = (
         Rapier
           .ColliderDesc

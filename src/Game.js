@@ -29,8 +29,6 @@ export default class Game {
     const bottomRight = { x: this.canvas.width, y: this.canvas.height }
 
     this.addObject(new Line(this, topLeft, topRight))
-    //  TODO: investigate why the first added line does not trigger collisions...
-    this.addObject(new Line(this, topLeft, topRight))
     this.addObject(new Line(this, topRight, bottomRight))
     this.addObject(new Line(this, topLeft, bottomLeft))
     this.addObject(new Line(this, bottomLeft, bottomRight))
@@ -67,7 +65,8 @@ export default class Game {
   }
 
   addObject(object) {
-    if (object.physicsHandle) {
+    console.log('Adding object', object, object.physicsHandle)
+    if (object.physicsHandle != undefined) {
       this.pyhsicsHandles.set(object.physicsHandle, object)
     }
     this.objects.push(object)
