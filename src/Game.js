@@ -100,7 +100,11 @@ function drawCollider(collider, ctx) {
   } else if (shape.type === 1) {
     const halfExtents = shape.halfExtents
     const position = collider.translation()
-    ctx.rect(position.x - halfExtents.x, position.y - halfExtents.y, halfExtents.x * 2, halfExtents.y * 2)
+    const rotation = collider.rotation()
+
+    ctx.translate(position.x, position.y)
+    ctx.rotate(rotation)
+    ctx.rect(-halfExtents.x, -halfExtents.y, halfExtents.x * 2, halfExtents.y * 2)
   }
   else console.log('UNKNOWN SHAPE!', shape)
   // Add more shape types if needed
