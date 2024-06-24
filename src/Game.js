@@ -4,6 +4,10 @@ import Bug from './Bug.js'
 import Line from './Line.js'
 import Rapier from '@dimforge/rapier2d-compat'
 
+function rigidBodyFromColliderHandle(world, handle) {
+  return world.colliders.get(handle).parent().handle
+}
+
 export default class Game {
   constructor(canvas) {
     this.canvas = canvas
@@ -11,7 +15,7 @@ export default class Game {
     const { width, height } = canvas
     this.objects = []
     this.input = new Input(this)
-    this.pyhsicsHandles = new Map()
+    this.physicsHandles = new Map()
   }
 
   async initialize() {
@@ -46,9 +50,12 @@ export default class Game {
         let handle1 = event.collider1()
         let handle2 = event.collider2()
       })
-      this.physicsEventQueue.drainCollisionEvents((handle1, handle2, started) => {
-        const o1 = this.pyhsicsHandles.get(handle1)
-        const o2 = this.pyhsicsHandles.get(handle2)
+      this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
+        const handle1 = rigidBodyFromColliderHandle(this.physics, colliderHandle1)
+        const handle2 = rigidBodyFromColliderHandle(this.physics, colliderHandle2)
+
+        const o1 = this.physicsHandles.get(handle1)
+        const o2 = this.physicsHandles.get(handle2)
         if (o1.collide) o1.collide(o2, started)
         if (o2.collide) o2.collide(o1, started)
       })
@@ -67,7 +74,7 @@ export default class Game {
   addObject(object) {
     console.log('Adding object', object, object.physicsHandle)
     if (object.physicsHandle != undefined) {
-      this.pyhsicsHandles.set(object.physicsHandle, object)
+      this.physicsHandles.set(object.physicsHandle, object)
     }
     this.objects.push(object)
   }
