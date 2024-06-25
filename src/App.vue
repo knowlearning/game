@@ -4,12 +4,14 @@
 
   const CANVAS_WIDTH = 800
   const CANVAS_HEIGHT = 600
-  const METRICS_SAMPLE_RATE = 100
+  const METRICS_SAMPLE_RATE = 10
 
   const myCanvas = ref(null)
   const fps = ref(0)
   const pointer = ref({ x: 0, y: 0 })
   const keys = ref({})
+
+  const FPSSamples = []
 
   onMounted(() => {
     const canvas = myCanvas.value
@@ -20,7 +22,9 @@
     game.initialize()
 
     const sampleGameMetrics = () => {
-      fps.value = game.fps
+      FPSSamples.push(game.fps)
+      if (FPSSamples.length > 128) FPSSamples.shift()
+      fps.value = (FPSSamples.reduce((a, b) => a + b, 0) / FPSSamples.length).toFixed(1)
       pointer.value = game.input.pointer
       keys.value = game.input.keys
       setTimeout(sampleGameMetrics, METRICS_SAMPLE_RATE)

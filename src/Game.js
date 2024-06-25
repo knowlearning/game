@@ -16,6 +16,7 @@ export default class Game {
     this.objects = []
     this.input = new Input(this)
     this.physicsHandles = new Map()
+    this.fps = 0
   }
 
   async initialize() {
@@ -47,7 +48,7 @@ export default class Game {
     const animate = timestamp => {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
       const dt = timestamp - lastTimestamp
-      this.fps = 1000 / dt
+      if (dt > 0) this.fps = 1000 / dt
       lastTimestamp = timestamp
 
       this.physics.step(this.physicsEventQueue)
