@@ -36,9 +36,10 @@ export default class Input {
 
     game.canvas.addEventListener('mousemove', event => {
       const { top, left } = game.canvas.getBoundingClientRect()
-      const { pointer } = this
-      pointer.x = event.x - left
-      pointer.y = event.y - top
+      this.pointer = {
+        x: event.x - left,
+        y: event.y - top
+      }
     }, false)
 
     window.addEventListener('keydown', event => {

@@ -1,5 +1,50 @@
 import Rapier from '@dimforge/rapier2d-compat'
 
+
+class WalkingState {
+  constructor(bug) {
+    this.bug = bug
+    this.bug.speed = Math.random() * 10 + 10
+  }
+  update() {
+    const { position, speed, angle } = this.bug
+    position.x += speed * Math.cos(angle)
+    position.y += speed * Math.sin(angle)
+  }
+  draw() {}
+}
+
+class AvoidObstacleState {
+  constructor(bug) {
+    this.bug = bug
+    this.bug.speed = 0
+    console.log('AVOIDING!')
+  }
+  update() {
+    this.bug.angle += Math.PI/120
+  }
+  draw() {}
+}
+
+class DraggingState {
+  constructor(bug) {
+    this.bug = bug
+    const { x, y } = bug.game.input.pointer
+    this.offset = {
+      x: x - this.bug.position.x,
+      y: y - this.bug.position.y
+    }
+  }
+  update() {
+    const { x, y } = this.bug.game.input.pointer
+    this.bug.position = {
+      x: x - this.offset.x,
+      y: y - this.offset.y
+    }
+  }
+  draw() {}
+}
+
 export default class Bug {
   constructor(game, position) {
     this.game = game
@@ -9,7 +54,7 @@ export default class Bug {
     this.width = 84
     this.height = 86
 
-    this.speed = Math.random() * 10 + 10
+    this.speed = 0
     this.angle = Math.PI * 2 * Math.random()
 
     const { x, y } = position
@@ -23,14 +68,13 @@ export default class Bug {
         .ball(42)
         .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
         .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
-        .setFriction(0)
-        .setRestitution(1)
     )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
+
+    this.state = new WalkingState(this)
   }
   update() {
-    this.position.x += this.speed * Math.cos(this.angle)
-    this.position.y += this.speed * Math.sin(this.angle)
+    this.state.update()
     this.rigidBody.setNextKinematicTranslation(this.position)
   }
   draw() {
@@ -47,18 +91,19 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, started) {
-    console.log('BUG COLLIDED WITH', object, started)
-    this.speed = 0
+    if (!(this.state instanceof DraggingState)) {
+      this.state = new AvoidObstacleState(this, object, started)
+    }
   }
 
   dragStart(position) {
+    this.state = new DraggingState(this)
   }
 
-  drag(delta) {
-    console.log('DRAGGGING BUG!!!!!!!!!', delta)
-  }
+  drag(delta) {}
 
   dragEnd() {
+    this.state = new WalkingState(this)
   }
 }
 
