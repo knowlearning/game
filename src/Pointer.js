@@ -42,13 +42,22 @@ class DragState {
   constructor(pointer, object) {
     this.pointer = pointer
     this.object = object
+    this.start = { ...this.pointer.game.input.pointer }
+    this.last = { ...this.pointer.game.input.pointer }
   }
   update() {
     if (!this.pointer.game.input.keys.mouseleft) {
+      this.object.dragEnd()
       this.pointer.state = new HoverState(this.pointer)
     }
     else {
-      this.object.drag()
+      const { x, y } = this.pointer.game.input.pointer
+      const dx = this.last.x - x
+      const dy = this.last.y - y
+      if (dx || dy) {
+        this.object.drag({ x: dx, y: dy })
+        this.last = { x, y }
+      }
     }
   }
   draw() {
@@ -64,31 +73,19 @@ export default class Pointer {
   constructor(game) {
     this.game = game
     this.state = new HoverState(this)
-
-    const rigidBodyDesc = Rapier.RigidBodyDesc.dynamic().setTranslation(0, 0)
-    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
-
-    const colliderDesc = (
-      Rapier
-        .ColliderDesc
-        .ball(1)
-        .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
-        .setFriction(0)
-        .setRestitution(1)
-    )
-    this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
   }
   update() {
-    if (this.game.input.keys.mouseleft && !(this.state instanceof DrawState)) {
+    if (this.game.input.keys.mouseleft && this.state instanceof HoverState) {
       const projection = this.game.physics.projectPoint(this.game.input.pointer, true)
-      if (projection?.collider?.handle) {
+      if (projection?.collider && projection.isInside) {
         const obj = this.game.objectFromColliderHandle(projection.collider.handle)
-        if (obj.drag) {
+        if (obj.dragStart) {
+          console.log(projection.collider.handle, obj)
+          obj.dragStart(this.game.input.pointer)
           this.state = new DragState(this, obj)
         }
       }
     }
-    //this.rigidBody.setTranslation(x, y)
     this.state.update()
   }
   draw() {

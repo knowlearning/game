@@ -55,8 +55,19 @@ export default class Bug {
     
   }
 
-  drag() {
-    console.log('DRAGGGING BUG!!!!!!!!!')
+  dragStart(position) {
+    this.rigidBody.setLinvel({ x: 0, y: 0}, true)
+  }
+
+  drag(delta) {
+    console.log('DRAGGGING BUG!!!!!!!!!', delta)
+  }
+
+  dragEnd() {
+    this.rigidBody.setLinvel({
+      x: Math.cos(this.angle) * this.startSpeed,
+      y: Math.sin(this.angle) * this.startSpeed
+    })
   }
 }
 
