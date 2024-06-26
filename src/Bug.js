@@ -9,16 +9,12 @@ export default class Bug {
     this.width = 84
     this.height = 86
 
-    const angle = Math.random() * Math.PI * 2
-    this.startSpeed = Math.random() * 100 + 100
-    this.velocity = {
-      x: Math.cos(angle) * this.startSpeed,
-      y: Math.sin(angle) * this.startSpeed
-    }
+    this.speed = Math.random() * 10 + 10
+    this.angle = Math.PI * 2 * Math.random()
 
     const { x, y } = position
 
-    const rigidBodyDesc = Rapier.RigidBodyDesc.kinematicVelocityBased().setTranslation(x, y)
+    const rigidBodyDesc = Rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(x, y)
     this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
 
     const colliderDesc = (
@@ -31,20 +27,18 @@ export default class Bug {
         .setRestitution(1)
     )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
-
-    this.rigidBody.setLinvel(this.velocity, true)
   }
   update() {
-    this.position = this.rigidBody.translation()
-    this.velocity = this.rigidBody.linvel()
-    clampVelocity(this.rigidBody, this.startSpeed)
+    this.position.x += this.speed * Math.cos(this.angle)
+    this.position.y += this.speed * Math.sin(this.angle)
+    this.rigidBody.setNextKinematicTranslation(this.position)
   }
   draw() {
     const ctx = this.game.context
     const { x, y } = this.position
     ctx.save()
     ctx.translate(x, y)
-    ctx.rotate(Math.atan2(this.velocity.y, this.velocity.x))
+    ctx.rotate(this.angle)
     ctx.drawImage(
       this.image,
       -this.width/2, -this.height/2, 
@@ -53,7 +47,8 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, started) {
-    console.log('BUG COLLIDED WITH', object)
+    console.log('BUG COLLIDED WITH', object, started)
+    this.speed = 0
   }
 
   dragStart(position) {
