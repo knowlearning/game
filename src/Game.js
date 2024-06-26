@@ -1,7 +1,7 @@
 import Input from './Input.js'
 import Pen from './Pen.js'
 import Bug from './Bug.js'
-import Line from './Line.js'
+import Path from './Path.js'
 import Rapier from '@dimforge/rapier2d-compat'
 
 function rigidBodyFromColliderHandle(world, handle) {
@@ -28,15 +28,14 @@ export default class Game {
     this.physics = new Rapier.World(gravity)
     this.physicsEventQueue = new Rapier.EventQueue(true)
 
-    const topLeft = { x: 0, y: 0 }
-    const topRight = { x: this.canvas.width, y: 0 }
-    const bottomLeft = { x: 0, y: this.canvas.height }
-    const bottomRight = { x: this.canvas.width, y: this.canvas.height }
+    const border = new Path(this)
+    border.addPoint({ x: 0, y: 0 })
+    border.addPoint({ x: this.canvas.width, y: 0 })
+    border.addPoint({ x: this.canvas.width, y: this.canvas.height })
+    border.addPoint({ x: 0, y: this.canvas.height })
+    border.addPoint({ x: 0, y: 0 })
 
-    this.addObject(new Line(this, topLeft, topRight))
-    this.addObject(new Line(this, topRight, bottomRight))
-    this.addObject(new Line(this, topLeft, bottomLeft))
-    this.addObject(new Line(this, bottomLeft, bottomRight))
+    this.addObject(border)
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
