@@ -1,5 +1,5 @@
 import Input from './Input.js'
-import Pen from './Pen.js'
+import Pointer from './Pointer.js'
 import Bug from './Bug.js'
 import Path from './Path.js'
 import Rapier from '@dimforge/rapier2d-compat'
@@ -42,7 +42,7 @@ export default class Game {
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Pen(this))
+    this.addObject(new Pointer(this))
 
     const animate = timestamp => {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
