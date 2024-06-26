@@ -51,13 +51,9 @@ export default class Game {
       lastTimestamp = timestamp
 
       this.physics.step(this.physicsEventQueue)
-      this.physicsEventQueue.drainContactForceEvents(event => {
-        let handle1 = event.collider1()
-        let handle2 = event.collider2()
-      })
       this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
-        const o1 = objectFromColliderHandle(colliderHandle1)
-        const o2 = objectFromColliderHandle(colliderHandle2)
+        const o1 = this.objectFromColliderHandle(colliderHandle1)
+        const o2 = this.objectFromColliderHandle(colliderHandle2)
         if (o1.collide) o1.collide(o2, started)
         if (o2.collide) o2.collide(o1, started)
       })

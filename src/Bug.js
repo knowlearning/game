@@ -18,7 +18,7 @@ export default class Bug {
 
     const { x, y } = position
 
-    const rigidBodyDesc = Rapier.RigidBodyDesc.dynamic().setTranslation(x, y)
+    const rigidBodyDesc = Rapier.RigidBodyDesc.kinematicVelocityBased().setTranslation(x, y)
     this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
 
     const colliderDesc = (
@@ -26,6 +26,7 @@ export default class Bug {
         .ColliderDesc
         .ball(42)
         .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
+        .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
         .setFriction(0)
         .setRestitution(1)
     )
@@ -52,11 +53,10 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, started) {
-    
+    console.log('BUG COLLIDED WITH', object)
   }
 
   dragStart(position) {
-    this.rigidBody.setLinvel({ x: 0, y: 0}, true)
   }
 
   drag(delta) {
@@ -64,10 +64,6 @@ export default class Bug {
   }
 
   dragEnd() {
-    this.rigidBody.setLinvel({
-      x: Math.cos(this.angle) * this.startSpeed,
-      y: Math.sin(this.angle) * this.startSpeed
-    })
   }
 }
 
