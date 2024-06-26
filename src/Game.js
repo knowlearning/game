@@ -56,11 +56,8 @@ export default class Game {
         let handle2 = event.collider2()
       })
       this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
-        const handle1 = rigidBodyFromColliderHandle(this.physics, colliderHandle1)
-        const handle2 = rigidBodyFromColliderHandle(this.physics, colliderHandle2)
-
-        const o1 = this.physicsHandles.get(handle1)
-        const o2 = this.physicsHandles.get(handle2)
+        const o1 = objectFromColliderHandle(colliderHandle1)
+        const o2 = objectFromColliderHandle(colliderHandle2)
         if (o1.collide) o1.collide(o2, started)
         if (o2.collide) o2.collide(o1, started)
       })
@@ -76,10 +73,13 @@ export default class Game {
     animate(0)
   }
 
+  objectFromColliderHandle(handle) {
+    return this.physicsHandles.get(rigidBodyFromColliderHandle(this.physics, handle))
+  }
+
   addObject(object) {
-    console.log('Adding object', object, object.physicsHandle)
-    if (object.physicsHandle != undefined) {
-      this.physicsHandles.set(object.physicsHandle, object)
+    if (object.rigidBody) {
+      this.physicsHandles.set(object.rigidBody.handle, object)
     }
     this.objects.push(object)
   }

@@ -32,8 +32,6 @@ export default class Bug {
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
 
     this.rigidBody.setLinvel(this.velocity, true)
-
-    this.physicsHandle = this.rigidBody.handle
   }
   update() {
     this.position = this.rigidBody.translation()
@@ -54,7 +52,7 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, started) {
-    console.log('BUG COLLIDED WITH OBJECT!', object, started)
+    
   }
 }
 

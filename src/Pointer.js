@@ -1,3 +1,4 @@
+import Rapier from '@dimforge/rapier2d-compat'
 import Path from './Path.js'
 
 class HoverState {
@@ -41,8 +42,29 @@ export default class Pointer {
   constructor(game) {
     this.game = game
     this.state = new HoverState(this)
+
+    const rigidBodyDesc = Rapier.RigidBodyDesc.dynamic().setTranslation(0, 0)
+    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
+
+    const colliderDesc = (
+      Rapier
+        .ColliderDesc
+        .ball(1)
+        .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
+        .setFriction(0)
+        .setRestitution(1)
+    )
+    this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
   }
   update() {
+    if (this.game.input.keys.mouseleft && !(this.state instanceof DrawState)) {
+      const projection = this.game.physics.projectPoint(this.game.input.pointer, true)
+      if (projection?.collider?.handle) {
+        const obj = this.game.objectFromColliderHandle(projection.collider.handle)
+        console.log('TODO: enter drag state for dragging obj if obj is draggable', obj)
+      }
+    }
+    //this.rigidBody.setTranslation(x, y)
     this.state.update()
   }
   draw() {

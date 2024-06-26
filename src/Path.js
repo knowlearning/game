@@ -12,7 +12,6 @@ export default class Path {
 
     const rigidBodyDesc = Rapier.RigidBodyDesc.fixed().setTranslation(0, 0)
     this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
-    this.physicsHandle = this.rigidBody.handle
   }
   addPoint({ x, y }) {
     this.path.push({ x, y })
