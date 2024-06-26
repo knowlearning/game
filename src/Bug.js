@@ -54,6 +54,10 @@ export default class Bug {
   collide(object, started) {
     
   }
+
+  drag() {
+    console.log('DRAGGGING BUG!!!!!!!!!')
+  }
 }
 
 function clampVelocity(body, maxSpeed) {

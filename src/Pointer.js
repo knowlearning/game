@@ -38,6 +38,28 @@ class DrawState {
   }
 }
 
+class DragState {
+  constructor(pointer, object) {
+    this.pointer = pointer
+    this.object = object
+  }
+  update() {
+    if (!this.pointer.game.input.keys.mouseleft) {
+      this.pointer.state = new HoverState(this.pointer)
+    }
+    else {
+      this.object.drag()
+    }
+  }
+  draw() {
+    const { x, y } = this.pointer.game.input.pointer
+    const ctx = this.pointer.game.context
+    ctx.beginPath()
+    ctx.arc(x, y, 5, 0, 2 * Math.PI)
+    ctx.fill()
+  }
+}
+
 export default class Pointer {
   constructor(game) {
     this.game = game
@@ -61,7 +83,9 @@ export default class Pointer {
       const projection = this.game.physics.projectPoint(this.game.input.pointer, true)
       if (projection?.collider?.handle) {
         const obj = this.game.objectFromColliderHandle(projection.collider.handle)
-        console.log('TODO: enter drag state for dragging obj if obj is draggable', obj)
+        if (obj.drag) {
+          this.state = new DragState(this, obj)
+        }
       }
     }
     //this.rigidBody.setTranslation(x, y)
