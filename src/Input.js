@@ -5,7 +5,7 @@ export default class Input {
 
     game.canvas.addEventListener('contextmenu', event => event.preventDefault())
 
-    game.canvas.addEventListener('mousedown', event => {
+    window.addEventListener('mousedown', event => {
       event.preventDefault()
       switch (event.which) {
         case 1:
@@ -21,7 +21,7 @@ export default class Input {
       }
     }, false)
 
-    game.canvas.addEventListener('mouseup', event => {
+    window.addEventListener('mouseup', event => {
       event.preventDefault()
       switch (event.which) {
         case 1:
@@ -36,12 +36,12 @@ export default class Input {
       }
     }, false)
 
-    game.canvas.addEventListener('mousemove', event => {
+    window.addEventListener('mousemove', event => {
       event.preventDefault()
-      const { top, left } = game.canvas.getBoundingClientRect()
+      const { top, left, width, height } = game.canvas.getBoundingClientRect()
       this.pointer = {
-        x: event.x - left,
-        y: event.y - top
+        x: Math.max(0, Math.min(width, event.x - left)),
+        y: Math.max(0, Math.min(height, event.y - top))
       }
     }, false)
 
