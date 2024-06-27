@@ -1,8 +1,5 @@
 import Rapier from '@dimforge/rapier2d-compat'
-
-function distance(a, b) {
-  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
-}
+import { distance } from './utils.js'
 
 export default class Path {
   constructor(game) {

@@ -1,6 +1,5 @@
 import Rapier from '@dimforge/rapier2d-compat'
 
-
 class WalkingState {
   constructor(bug) {
     this.bug = bug
@@ -14,14 +13,15 @@ class WalkingState {
   draw() {}
 }
 
-class AvoidObstacleState {
+class ResolveCollisionState {
   constructor(bug) {
     this.bug = bug
     this.bug.speed = 0
-    console.log('AVOIDING!')
   }
   update() {
-    this.bug.angle += Math.PI/120
+    if (this.bug.collisions.size) {
+      //  TODO: calculate correction direction to nudge the bug towards...
+    }
   }
   draw() {}
 }
@@ -72,7 +72,7 @@ export default class Bug {
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
 
     this.state = new WalkingState(this)
-    this.collidedObjects = new Set()
+    this.collisions = new Set()
   }
   update() {
     this.state.update()
@@ -92,12 +92,13 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, started) {
-    if (started) this.collidedObjects.add(object)
-    else this.collidedObjects.delete(object)
-
-    if (!(this.state instanceof DraggingState)) {
-      this.state = new AvoidObstacleState(this, object, started)
+    if (started) {
+      this.collisions.add(object)
+      if (!(this.state instanceof DraggingState)) {
+        this.state = new ResolveCollisionState(this)
+      }
     }
+    else this.collisions.delete(object)
   }
 
   dragStart(position) {
@@ -108,21 +109,5 @@ export default class Bug {
 
   dragEnd() {
     this.state = new WalkingState(this)
-  }
-}
-
-function clampVelocity(body, maxSpeed) {
-  const velocity = body.linvel()
-  const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
-
-  if (speed > maxSpeed) {
-    const scale = maxSpeed / speed
-    const targetVelocity = { x: velocity.x * scale, y: velocity.y * scale }
-    const impulse = {
-      x: (targetVelocity.x - velocity.x) * body.mass(),
-      y: (targetVelocity.y - velocity.y) * body.mass()
-    }
-
-    body.applyImpulse(impulse, true)
   }
 }
