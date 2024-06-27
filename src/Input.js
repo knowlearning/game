@@ -6,6 +6,7 @@ export default class Input {
     game.canvas.addEventListener('contextmenu', event => event.preventDefault())
 
     game.canvas.addEventListener('mousedown', event => {
+      event.preventDefault()
       switch (event.which) {
         case 1:
           this.keys['mouseleft'] = true
@@ -21,6 +22,7 @@ export default class Input {
     }, false)
 
     game.canvas.addEventListener('mouseup', event => {
+      event.preventDefault()
       switch (event.which) {
         case 1:
           delete this.keys['mouseleft']
@@ -35,6 +37,7 @@ export default class Input {
     }, false)
 
     game.canvas.addEventListener('mousemove', event => {
+      event.preventDefault()
       const { top, left } = game.canvas.getBoundingClientRect()
       this.pointer = {
         x: event.x - left,
@@ -43,11 +46,13 @@ export default class Input {
     }, false)
 
     window.addEventListener('keydown', event => {
-        this.keys[event.key] = true
+      event.preventDefault()
+      this.keys[event.key] = true
     }, false)
 
     window.addEventListener('keyup', event => {
-        delete this.keys[event.key]
+      event.preventDefault()
+      delete this.keys[event.key]
     }, false)
   }
 }
