@@ -16,6 +16,8 @@ export default class Game {
     this.objects = []
     this.input = new Input(this)
     this.physicsHandles = new Map()
+    this.objectCollisions = new Map()
+    this.collisionManifolds = new Map()
     this.fps = 0
   }
 
@@ -50,13 +52,55 @@ export default class Game {
       if (dt > 0) this.fps = 1000 / dt
       lastTimestamp = timestamp
 
+      const objectsWithCollisionEvents = new Set()
+
       this.physics.step(this.physicsEventQueue)
       this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
         const o1 = this.objectFromColliderHandle(colliderHandle1)
         const o2 = this.objectFromColliderHandle(colliderHandle2)
-        if (o1.collide) o1.collide(o2, started)
-        if (o2.collide) o2.collide(o1, started)
+
+        if (o1.collide) objectsWithCollisionEvents.add(o1)
+        if (o2.collide) objectsWithCollisionEvents.add(o2)
+
+        const collisionId = [colliderHandle1, colliderHandle2].sort().join('-')
+
+        if (started) {
+          this.objectCollisions.get(o1).add(collisionId)
+          this.objectCollisions.get(o2).add(collisionId)
+        }
+        else {
+          his.objectCollisions.get(o1).delete(collisionId)
+          this.objectCollisions.get(o2).delete(collisionId)
+        }
+        this
+          .physics
+          .contactPair(
+            this.physics.colliders.get(colliderHandle1),
+            this.physics.colliders.get(colliderHandle2),
+            (manifold, flipped) => {
+              //  TODO: deal with complexities for "flipped" info
+              this.collisionManifolds.set(collisionId, { o1, o2, manifold })
+            }
+          )
       })
+      objectsWithCollisionEvents
+        .forEach(object => {
+          const otherObjectToManifolds = new Map()
+          this
+            .objectCollisions
+            .get(object)
+            .forEach(collisionId => {
+              const { o1, o2, manifold } = this.collisionManifolds.get(collisionId)
+              const otherObject = o1 === object ? o2 : o1
+              const manifolds = otherObjectToManifolds.get(otherObject) || []
+              manifolds.push({ manifold })
+              otherObjectToManifolds.set(otherObject, manifolds)
+            })
+          otherObjectToManifolds
+            .forEach((manifolds, otherObject) => {
+              object.collide(otherObject, manifolds)
+            })
+        })
       this.objects.forEach(object => object.update(dt))
       this.objects.forEach(object => object.draw())
 
@@ -78,6 +122,7 @@ export default class Game {
       this.physicsHandles.set(object.rigidBody.handle, object)
     }
     this.objects.push(object)
+    this.objectCollisions.set(object, new Set())
   }
 
   randomPosition() {

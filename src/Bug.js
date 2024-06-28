@@ -82,7 +82,7 @@ export default class Bug {
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
 
     this.state = new WalkingState(this)
-    this.collisions = new Set()
+    this.collisions = new Map()
   }
   update(dt) {
     if (!(this.state instanceof DraggingState)) {
@@ -126,9 +126,9 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(object, started) {
-    if (started) {
-      this.collisions.add(object)
+  collide(object, manifolds) {
+    if (manifolds.length) {
+      //this.collisions.add(object, manifolds)
       if (!(this.state instanceof DraggingState)) this.state = new TurnState(this)
     }
     else this.collisions.delete(object)
