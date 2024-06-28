@@ -3,9 +3,14 @@ import Rapier from '@dimforge/rapier2d-compat'
 class WalkingState {
   constructor(bug) {
     this.bug = bug
-    this.bug.speed = Math.random() * 10 + 5
+    this.maxSpeed = Math.random() * 10 + 5
+    this.acceleration = 1
+    this.bug.speed = 0
   }
   update() {
+    if (this.bug.speed < this.maxSpeed) {
+      this.bug.speed += this.acceleration
+    }
     const { position, speed, angle } = this.bug
     position.x += speed * Math.cos(angle)
     position.y += speed * Math.sin(angle)
@@ -17,7 +22,7 @@ class TurnState {
   constructor(bug) {
     this.bug = bug
     this.bug.speed = Math.random() * 10 + 10
-    this.turnTime = Math.random() * 2000
+    this.turnTime = Math.random() * 1000
     this.direction = Math.random() > 0.5 ? -1 : 1
     this.timeElapsed = 0
   }
@@ -104,8 +109,9 @@ export default class Bug {
     }
     this.state.update(dt)
     this.rigidBody.setNextKinematicTranslation(this.position)
-    this.position.x = Math.max(0, Math.min(this.game.canvas.width, this.position.x))
-    this.position.y = Math.max(0, Math.min(this.game.canvas.height, this.position.y))
+    const r = 42
+    this.position.x = Math.max(r, Math.min(this.game.canvas.width-r, this.position.x))
+    this.position.y = Math.max(r, Math.min(this.game.canvas.height-r, this.position.y))
   }
   draw() {
     const ctx = this.game.context
@@ -123,7 +129,7 @@ export default class Bug {
   collide(object, started) {
     if (started) {
       this.collisions.add(object)
-      this.state = new TurnState(this)
+      if (!(this.state instanceof DraggingState)) this.state = new TurnState(this)
     }
     else this.collisions.delete(object)
   }
