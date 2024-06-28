@@ -85,28 +85,6 @@ export default class Bug {
     this.collisions = new Map()
   }
   update(dt) {
-    if (!(this.state instanceof DraggingState)) {
-      if (this.collisions.size) {
-        const { rigidBody } = this
-        let totalOffsetX = 0
-        let totalOffsetY = 0
-        this.game.physics.contactPairsWith(rigidBody.collider(0), collider => {
-          this.game.physics.contactPair(rigidBody.collider(0), collider, (manifold, flipped) => {
-            const normal = manifold.normal()
-            const maxOffset = 10
-            let distance = manifold.contactDist()
-            const offsetX = normal.x * distance/2 * (flipped ? -1 : 1)
-            const offsetY = normal.y * distance/2 * (flipped ? -1 : 1)
-            this.position.x += offsetX
-            this.position.y += offsetY
-
-            totalOffsetX += offsetX
-            totalOffsetY += offsetY
-          })
-        })
-        if (totalOffsetX + totalOffsetY > 1 && !(this.state instanceof TurnState)) this.state = new TurnState(this)
-      }
-    }
     this.state.update(dt)
     this.rigidBody.setNextKinematicTranslation(this.position)
     const r = 42
@@ -126,12 +104,17 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(object, manifolds) {
-    if (manifolds.length) {
-      //this.collisions.add(object, manifolds)
-      if (!(this.state instanceof DraggingState)) this.state = new TurnState(this)
+  collide(object, collisions) {
+    if (collisions.length) {
+      if (!(this.state instanceof DraggingState)) {
+        collisions
+          .forEach(({ normal, distance, flipped}) => {
+            this.position.x += normal.x * distance/2 * (flipped ? 1 : -1)
+            this.position.y += normal.y * distance/2 * (flipped ? 1 : -1)
+          })
+        if (!(this.state instanceof TurnState)) this.state = new TurnState(this)
+      }
     }
-    else this.collisions.delete(object)
   }
 
   dragStart(position) {

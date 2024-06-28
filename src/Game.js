@@ -79,7 +79,9 @@ export default class Game {
             this.physics.colliders.get(colliderHandle2),
             (manifold, flipped) => {
               //  TODO: deal with complexities for "flipped" info
-              this.collisionManifolds.set(collisionId, { o1, o2, manifold })
+              const normal = manifold.normal()
+              const distance = manifold.contactDist()
+              this.collisionManifolds.set(collisionId, { o1, o2, normal, distance })
             }
           )
       })
@@ -90,10 +92,10 @@ export default class Game {
             .objectCollisions
             .get(object)
             .forEach(collisionId => {
-              const { o1, o2, manifold } = this.collisionManifolds.get(collisionId)
+              const { o1, o2, normal, distance } = this.collisionManifolds.get(collisionId)
               const otherObject = o1 === object ? o2 : o1
               const manifolds = otherObjectToManifolds.get(otherObject) || []
-              manifolds.push({ manifold })
+              manifolds.push({ normal, distance })
               otherObjectToManifolds.set(otherObject, manifolds)
             })
           otherObjectToManifolds
