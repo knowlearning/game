@@ -20,7 +20,16 @@ class ResolveCollisionState {
   }
   update() {
     if (this.bug.collisions.size) {
-      //  TODO: calculate correction direction to nudge the bug towards...
+      const { rigidBody } = this.bug
+
+      this.bug.game.physics.contactPairsWith(rigidBody.collider(0), collider => {
+        this.bug.game.physics.contactPair(rigidBody.collider(0), collider, (manifold, flipped) => {
+          const normal = manifold.normal()
+          const distance = manifold.contactDist()
+          this.bug.position.x += normal.x * distance/2 * (flipped ? -1 : 1)
+          this.bug.position.y += normal.y * distance/2 * (flipped ? -1 : 1)
+        })
+      })
     }
   }
   draw() {}
