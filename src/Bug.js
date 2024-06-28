@@ -3,7 +3,7 @@ import Rapier from '@dimforge/rapier2d-compat'
 class WalkingState {
   constructor(bug) {
     this.bug = bug
-    this.bug.speed = Math.random() * 10 + 10
+    this.bug.speed = Math.random() * 10 + 5
   }
   update() {
     const { position, speed, angle } = this.bug
@@ -13,23 +13,19 @@ class WalkingState {
   draw() {}
 }
 
-class ResolveCollisionState {
+class TurnState {
   constructor(bug) {
     this.bug = bug
-    this.bug.speed = 0
+    this.bug.speed = Math.random() * 10 + 10
+    this.turnTime = Math.random() * 2000
+    this.direction = Math.random() > 0.5 ? -1 : 1
+    this.timeElapsed = 0
   }
-  update() {
-    if (this.bug.collisions.size) {
-      const { rigidBody } = this.bug
-
-      this.bug.game.physics.contactPairsWith(rigidBody.collider(0), collider => {
-        this.bug.game.physics.contactPair(rigidBody.collider(0), collider, (manifold, flipped) => {
-          const normal = manifold.normal()
-          const distance = manifold.contactDist()
-          this.bug.position.x += normal.x * distance/2 * (flipped ? -1 : 1)
-          this.bug.position.y += normal.y * distance/2 * (flipped ? -1 : 1)
-        })
-      })
+  update(dt) {
+    this.timeElapsed += dt
+    this.bug.angle += Math.PI/60 * this.direction
+    if (this.timeElapsed >= this.turnTime) {
+      this.bug.state = new WalkingState(this.bug)
     }
   }
   draw() {}
@@ -83,9 +79,33 @@ export default class Bug {
     this.state = new WalkingState(this)
     this.collisions = new Set()
   }
-  update() {
-    this.state.update()
+  update(dt) {
+    if (!(this.state instanceof DraggingState)) {
+      if (this.collisions.size) {
+        const { rigidBody } = this
+        let totalOffsetX = 0
+        let totalOffsetY = 0
+        this.game.physics.contactPairsWith(rigidBody.collider(0), collider => {
+          this.game.physics.contactPair(rigidBody.collider(0), collider, (manifold, flipped) => {
+            const normal = manifold.normal()
+            const maxOffset = 10
+            let distance = manifold.contactDist()
+            const offsetX = normal.x * distance/2 * (flipped ? -1 : 1)
+            const offsetY = normal.y * distance/2 * (flipped ? -1 : 1)
+            this.position.x += offsetX
+            this.position.y += offsetY
+
+            totalOffsetX += offsetX
+            totalOffsetY += offsetY
+          })
+        })
+        if (totalOffsetX + totalOffsetY > 1 && !(this.state instanceof TurnState)) this.state = new TurnState(this)
+      }
+    }
+    this.state.update(dt)
     this.rigidBody.setNextKinematicTranslation(this.position)
+    this.position.x = Math.max(0, Math.min(this.game.canvas.width, this.position.x))
+    this.position.y = Math.max(0, Math.min(this.game.canvas.height, this.position.y))
   }
   draw() {
     const ctx = this.game.context
@@ -103,9 +123,7 @@ export default class Bug {
   collide(object, started) {
     if (started) {
       this.collisions.add(object)
-      if (!(this.state instanceof DraggingState)) {
-        this.state = new ResolveCollisionState(this)
-      }
+      this.state = new TurnState(this)
     }
     else this.collisions.delete(object)
   }
@@ -113,9 +131,7 @@ export default class Bug {
   dragStart(position) {
     this.state = new DraggingState(this)
   }
-
   drag(delta) {}
-
   dragEnd() {
     this.state = new WalkingState(this)
   }
