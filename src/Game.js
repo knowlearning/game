@@ -40,10 +40,6 @@ export default class Game {
     this.addObject(border)
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Pointer(this))
 
     const animate = timestamp => {
@@ -53,6 +49,7 @@ export default class Game {
       lastTimestamp = timestamp
 
       const objectsWithCollisionEvents = new Set()
+      const doneCollisions = new Map()
 
       this.physics.step(this.physicsEventQueue)
       this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
@@ -67,11 +64,16 @@ export default class Game {
         if (started) {
           this.objectCollisions.get(o1).add(collisionId)
           this.objectCollisions.get(o2).add(collisionId)
+          doneCollisions.delete(o1)
+          doneCollisions.delete(o2)
         }
         else {
-          his.objectCollisions.get(o1).delete(collisionId)
+          this.objectCollisions.get(o1).delete(collisionId)
           this.objectCollisions.get(o2).delete(collisionId)
+          if (this.objectCollisions.get(o1).size === 0) doneCollisions.set(o1, o2)
+          if (this.objectCollisions.get(o2).size === 0) doneCollisions.set(o2, o1)
         }
+
         this
           .physics
           .contactPair(
@@ -81,6 +83,7 @@ export default class Game {
               //  TODO: deal with complexities for "flipped" info
               const normal = manifold.normal()
               const distance = manifold.contactDist()
+              if (flipped) console.log('FLIIIIIIIIIIIIIIIIIIIIIIPPED')
               this.collisionManifolds.set(collisionId, { o1, o2, normal, distance })
             }
           )
@@ -92,8 +95,12 @@ export default class Game {
             .objectCollisions
             .get(object)
             .forEach(collisionId => {
-              const { o1, o2, normal, distance } = this.collisionManifolds.get(collisionId)
+              const { o1, o2, normal: originalNormal, distance } = this.collisionManifolds.get(collisionId)
               const otherObject = o1 === object ? o2 : o1
+              const normal = {
+                x: o1 === object ? originalNormal.x : -originalNormal.x,
+                y: o1 === object ? originalNormal.y : -originalNormal.y
+              }
               const manifolds = otherObjectToManifolds.get(otherObject) || []
               manifolds.push({ normal, distance })
               otherObjectToManifolds.set(otherObject, manifolds)
@@ -103,6 +110,9 @@ export default class Game {
               object.collide(otherObject, manifolds)
             })
         })
+
+      doneCollisions.forEach((o1, o2) => o1.collide && o1.collide(o2, []))
+
       this.objects.forEach(object => object.update(dt))
       this.objects.forEach(object => object.draw())
 

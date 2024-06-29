@@ -63,6 +63,7 @@ export default class Bug {
     this.image.src = '/ladybug.svg'
     this.width = 84
     this.height = 86
+    this.collisions = []
 
     this.speed = 0
     this.angle = Math.PI * 2 * Math.random()
@@ -86,10 +87,20 @@ export default class Bug {
   }
   update(dt) {
     this.state.update(dt)
-    this.rigidBody.setNextKinematicTranslation(this.position)
+    if (this.collisions.length && !(this.state instanceof DraggingState)) {
+      console.log(this.collisions.length)
+      this
+        .collisions
+        .forEach(({ normal, distance }) => {
+          this.position.x += normal.x * distance
+          this.position.y += normal.y * distance
+        })
+      if (!(this.state instanceof TurnState)) this.state = new TurnState(this)
+    }
     const r = 42
     this.position.x = Math.max(r, Math.min(this.game.canvas.width-r, this.position.x))
     this.position.y = Math.max(r, Math.min(this.game.canvas.height-r, this.position.y))
+    this.rigidBody.setNextKinematicTranslation(this.position)
   }
   draw() {
     const ctx = this.game.context
@@ -105,16 +116,7 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, collisions) {
-    if (collisions.length) {
-      if (!(this.state instanceof DraggingState)) {
-        collisions
-          .forEach(({ normal, distance, flipped}) => {
-            this.position.x += normal.x * distance/2 * (flipped ? 1 : -1)
-            this.position.y += normal.y * distance/2 * (flipped ? 1 : -1)
-          })
-        if (!(this.state instanceof TurnState)) this.state = new TurnState(this)
-      }
-    }
+    this.collisions = collisions
   }
 
   dragStart(position) {
