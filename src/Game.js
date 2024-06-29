@@ -75,18 +75,9 @@ export default class Game {
         }
 
         this
-          .physics
-          .contactPair(
-            this.physics.colliders.get(colliderHandle1),
-            this.physics.colliders.get(colliderHandle2),
-            (manifold, flipped) => {
-              //  TODO: deal with complexities for "flipped" info
-              const normal = manifold.normal()
-              const distance = manifold.contactDist()
-              if (flipped) console.log('FLIIIIIIIIIIIIIIIIIIIIIIPPED')
-              this.collisionManifolds.set(collisionId, { o1, o2, normal, distance })
-            }
-          )
+          .collisionManifolds
+          .set(collisionId, { colliderHandle1, colliderHandle2, o1, o2 })
+
       })
       objectsWithCollisionEvents
         .forEach(object => {
@@ -95,15 +86,29 @@ export default class Game {
             .objectCollisions
             .get(object)
             .forEach(collisionId => {
-              const { o1, o2, normal: originalNormal, distance } = this.collisionManifolds.get(collisionId)
-              const otherObject = o1 === object ? o2 : o1
-              const normal = {
-                x: o1 === object ? originalNormal.x : -originalNormal.x,
-                y: o1 === object ? originalNormal.y : -originalNormal.y
-              }
-              const manifolds = otherObjectToManifolds.get(otherObject) || []
-              manifolds.push({ normal, distance })
-              otherObjectToManifolds.set(otherObject, manifolds)
+              const { o1, o2, colliderHandle1, colliderHandle2 } = this.collisionManifolds.get(collisionId)
+              this
+                .physics
+                .contactPair(
+                  this.physics.colliders.get(colliderHandle1),
+                  this.physics.colliders.get(colliderHandle2),
+                  (manifold, flipped) => {
+                    //  TODO: deal with complexities for "flipped" info
+                    const originalNormal = manifold.normal()
+                    const distance = manifold.contactDist()
+                    const otherObject = o1 === object ? o2 : o1
+                    const normal = {
+                      x: o1 === object ? originalNormal.x : -originalNormal.x,
+                      y: o1 === object ? originalNormal.y : -originalNormal.y
+                    }
+                    object.position.x += normal.x * distance/2
+                    object.position.y += normal.y * distance/2
+                    object.rigidBody.setTranslation(object.position.x, object.position.y)
+                    const manifolds = otherObjectToManifolds.get(otherObject) || []
+                    manifolds.push({ normal })
+                    otherObjectToManifolds.set(otherObject, manifolds)
+                  }
+                )
             })
           otherObjectToManifolds
             .forEach((manifolds, otherObject) => {

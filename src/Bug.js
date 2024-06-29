@@ -5,7 +5,7 @@ class WalkingState {
     this.bug = bug
     this.maxSpeed = Math.random() * 10 + 5
     this.acceleration = 1
-    this.bug.speed = 0
+    this.bug.speed = 1
   }
   update() {
     if (this.bug.speed < this.maxSpeed) {
@@ -29,9 +29,7 @@ class TurnState {
   update(dt) {
     this.timeElapsed += dt
     this.bug.angle += Math.PI/60 * this.direction
-    if (this.timeElapsed >= this.turnTime) {
-      this.bug.state = new WalkingState(this.bug)
-    }
+    if (this.timeElapsed >= this.turnTime) this.bug.state = new WalkingState(this.bug)
   }
   draw() {}
 }
@@ -87,16 +85,6 @@ export default class Bug {
   }
   update(dt) {
     this.state.update(dt)
-    if (this.collisions.length && !(this.state instanceof DraggingState)) {
-      console.log(this.collisions.length)
-      this
-        .collisions
-        .forEach(({ normal, distance }) => {
-          this.position.x += normal.x * distance
-          this.position.y += normal.y * distance
-        })
-      if (!(this.state instanceof TurnState)) this.state = new TurnState(this)
-    }
     const r = 42
     this.position.x = Math.max(r, Math.min(this.game.canvas.width-r, this.position.x))
     this.position.y = Math.max(r, Math.min(this.game.canvas.height-r, this.position.y))
@@ -116,7 +104,14 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, collisions) {
+    console.log('COLLIDE!', this, object, collisions)
     this.collisions = collisions
+    if (!(this.state instanceof DraggingState)
+    &&  !(this.state instanceof TurnState)
+    &&  collisions.length
+    ) {
+        this.state = new TurnState(this)
+    }
   }
 
   dragStart(position) {
