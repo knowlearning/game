@@ -18,7 +18,7 @@ class WalkingState {
 class TurnState {
   constructor(bug) {
     this.bug = bug
-    this.bug.speed = Math.random() * 10 + 10
+    this.bug.speed = 0
     this.turnTime = Math.random() * 1000
     this.direction = Math.random() > 0.5 ? -1 : 1
     this.timeElapsed = 0
