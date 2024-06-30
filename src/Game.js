@@ -29,6 +29,7 @@ export default class Game {
     const gravity = { x: 0, y: 0 }
     this.physics = new Rapier.World(gravity)
     this.physicsEventQueue = new Rapier.EventQueue(true)
+    this.characterController = this.physics.createCharacterController(0)
 
     const border = new Path(this)
     border.addPoint({ x: 0, y: 0 })

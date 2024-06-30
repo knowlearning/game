@@ -78,7 +78,6 @@ export default class Bug {
 
     this.state = new WalkingState(this)
     this.collisions = new Map()
-    this.characterController = this.game.physics.createCharacterController(0)
 
   }
   update(dt) {
@@ -88,11 +87,12 @@ export default class Bug {
       x: speed * Math.cos(angle),
       y: speed * Math.sin(angle)
     }
-    this.characterController.computeColliderMovement(this.collider, desiredTranslation)
-    const correctedMovement = this.characterController.computedMovement()
+    this.game.characterController.computeColliderMovement(this.collider, desiredTranslation)
+    const correctedMovement = this.game.characterController.computedMovement()
+    const r = 42
     this.position = {
-      x: position.x + correctedMovement.x,
-      y: position.y + correctedMovement.y
+      x: Math.max(r, Math.min(this.game.canvas.width - r, position.x + correctedMovement.x)),
+      y: Math.max(r, Math.min(this.game.canvas.height - r, position.y + correctedMovement.y))
     }
     this.rigidBody.setNextKinematicTranslation(this.position)
     this.rigidBody.setRotation(angle)
@@ -111,12 +111,8 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, collisions) {
-    console.log('COLLIDING???', object, collisions)
     this.collisions.set(object, collisions)
-    if (!(this.state instanceof DraggingState)
-    &&  !(this.state instanceof TurnState)
-    &&  collisions.length
-    ) {
+    if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState) && collisions.length) {
         this.state = new TurnState(this)
     }
   }
