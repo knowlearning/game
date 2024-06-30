@@ -5,15 +5,12 @@ class WalkingState {
     this.bug = bug
     this.maxSpeed = Math.random() * 10 + 5
     this.acceleration = 1
-    this.bug.speed = 1
+    this.bug.speed = 0
   }
   update() {
     if (this.bug.speed < this.maxSpeed) {
       this.bug.speed += this.acceleration
     }
-    const { position, speed, angle } = this.bug
-    position.x += speed * Math.cos(angle)
-    position.y += speed * Math.sin(angle)
   }
   draw() {}
 }
@@ -61,7 +58,6 @@ export default class Bug {
     this.image.src = '/ladybug.svg'
     this.width = 84
     this.height = 86
-    this.collisions = []
 
     this.speed = 0
     this.angle = Math.PI * 2 * Math.random()
@@ -82,13 +78,24 @@ export default class Bug {
 
     this.state = new WalkingState(this)
     this.collisions = new Map()
+    this.characterController = this.game.physics.createCharacterController(0)
+
   }
   update(dt) {
     this.state.update(dt)
-    const r = 42
-    this.position.x = Math.max(r, Math.min(this.game.canvas.width-r, this.position.x))
-    this.position.y = Math.max(r, Math.min(this.game.canvas.height-r, this.position.y))
+    const { position, speed, angle } = this
+    const desiredTranslation = {
+      x: speed * Math.cos(angle),
+      y: speed * Math.sin(angle)
+    }
+    this.characterController.computeColliderMovement(this.collider, desiredTranslation)
+    const correctedMovement = this.characterController.computedMovement()
+    this.position = {
+      x: position.x + correctedMovement.x,
+      y: position.y + correctedMovement.y
+    }
     this.rigidBody.setNextKinematicTranslation(this.position)
+    this.rigidBody.setRotation(angle)
   }
   draw() {
     const ctx = this.game.context
@@ -104,8 +111,8 @@ export default class Bug {
     ctx.restore()
   }
   collide(object, collisions) {
-    console.log('COLLIDE!', this, object, collisions)
-    this.collisions = collisions
+    console.log('COLLIDING???', object, collisions)
+    this.collisions.set(object, collisions)
     if (!(this.state instanceof DraggingState)
     &&  !(this.state instanceof TurnState)
     &&  collisions.length

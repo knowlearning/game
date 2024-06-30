@@ -39,7 +39,6 @@ export default class Game {
 
     this.addObject(border)
     this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Pointer(this))
 
     const animate = timestamp => {
@@ -101,11 +100,8 @@ export default class Game {
                       x: o1 === object ? originalNormal.x : -originalNormal.x,
                       y: o1 === object ? originalNormal.y : -originalNormal.y
                     }
-                    object.position.x += normal.x * distance/2
-                    object.position.y += normal.y * distance/2
-                    object.rigidBody.setTranslation(object.position.x, object.position.y)
                     const manifolds = otherObjectToManifolds.get(otherObject) || []
-                    manifolds.push({ normal })
+                    manifolds.push({ normal, distance })
                     otherObjectToManifolds.set(otherObject, manifolds)
                   }
                 )
@@ -121,9 +117,7 @@ export default class Game {
       this.objects.forEach(object => object.update(dt))
       this.objects.forEach(object => object.draw())
 
-      this.physics.forEachCollider(
-        collider => drawCollider(collider, this.context)
-      )
+      this.physics.forEachCollider(c => drawCollider(c, this.context))
 
       requestAnimationFrame(animate)
     }
