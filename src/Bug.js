@@ -76,6 +76,9 @@ export default class Bug {
     )
     this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
 
+    this.characterController = game.physics.createCharacterController(1)
+
+
     this.state = new WalkingState(this)
     this.collisions = new Map()
 
@@ -87,8 +90,8 @@ export default class Bug {
       x: speed * Math.cos(angle),
       y: speed * Math.sin(angle)
     }
-    this.game.characterController.computeColliderMovement(this.collider, desiredTranslation)
-    const correctedMovement = this.game.characterController.computedMovement()
+    this.characterController.computeColliderMovement(this.collider, desiredTranslation)
+    const correctedMovement = this.characterController.computedMovement()
     const r = 42
     this.position = {
       x: Math.max(r, Math.min(this.game.canvas.width - r, position.x + correctedMovement.x)),
@@ -96,6 +99,18 @@ export default class Bug {
     }
     this.rigidBody.setNextKinematicTranslation(this.position)
     this.rigidBody.setRotation(angle)
+
+    this.collisions = new Map()
+    for (let i = 0; i < this.characterController.numComputedCollisions(); i++) {
+      const collision = this.characterController.computedCollision(i)
+      const otherObect = this.game.objectFromColliderHandle(collision.collider.handle)
+      const collisions = this.collisions.get(otherObect) || []
+      collisions.push({ normal: collision.normal1 })
+      this.collisions.set(otherObect, collisions)
+    }
+    this.collisions.forEach((collisions, otherObject) => {
+      this.collide(otherObject, collisions)
+    })
   }
   draw() {
     const ctx = this.game.context
@@ -110,8 +125,8 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(object, collisions) {
-    this.collisions.set(object, collisions)
+  collide(otherObject, collisions) {
+    console.log('COLLISION', otherObject, collisions)
     if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState) && collisions.length) {
         this.state = new TurnState(this)
     }

@@ -29,7 +29,6 @@ export default class Game {
     const gravity = { x: 0, y: 0 }
     this.physics = new Rapier.World(gravity)
     this.physicsEventQueue = new Rapier.EventQueue(true)
-    this.characterController = this.physics.createCharacterController(0)
 
     const border = new Path(this)
     border.addPoint({ x: 0, y: 0 })
@@ -39,13 +38,6 @@ export default class Game {
     border.addPoint({ x: 0, y: 0 })
 
     this.addObject(border)
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Bug(this, this.randomPosition()))
     this.addObject(new Pointer(this))
 
@@ -59,72 +51,8 @@ export default class Game {
       const doneCollisions = new Map()
 
       this.physics.step(this.physicsEventQueue)
-      this.physicsEventQueue.drainCollisionEvents((colliderHandle1, colliderHandle2, started) => {
-        const o1 = this.objectFromColliderHandle(colliderHandle1)
-        const o2 = this.objectFromColliderHandle(colliderHandle2)
-
-        if (o1.collide) objectsWithCollisionEvents.add(o1)
-        if (o2.collide) objectsWithCollisionEvents.add(o2)
-
-        const collisionId = [colliderHandle1, colliderHandle2].sort().join('-')
-
-        if (started) {
-          this.objectCollisions.get(o1).add(collisionId)
-          this.objectCollisions.get(o2).add(collisionId)
-          doneCollisions.delete(o1)
-          doneCollisions.delete(o2)
-        }
-        else {
-          this.objectCollisions.get(o1).delete(collisionId)
-          this.objectCollisions.get(o2).delete(collisionId)
-          if (this.objectCollisions.get(o1).size === 0) doneCollisions.set(o1, o2)
-          if (this.objectCollisions.get(o2).size === 0) doneCollisions.set(o2, o1)
-        }
-
-        this
-          .collisionManifolds
-          .set(collisionId, { colliderHandle1, colliderHandle2, o1, o2 })
-
-      })
-      objectsWithCollisionEvents
-        .forEach(object => {
-          const otherObjectToManifolds = new Map()
-          this
-            .objectCollisions
-            .get(object)
-            .forEach(collisionId => {
-              const { o1, o2, colliderHandle1, colliderHandle2 } = this.collisionManifolds.get(collisionId)
-              this
-                .physics
-                .contactPair(
-                  this.physics.colliders.get(colliderHandle1),
-                  this.physics.colliders.get(colliderHandle2),
-                  (manifold, flipped) => {
-                    //  TODO: deal with complexities for "flipped" info
-                    const originalNormal = manifold.normal()
-                    const distance = manifold.contactDist()
-                    const otherObject = o1 === object ? o2 : o1
-                    const normal = {
-                      x: o1 === object ? originalNormal.x : -originalNormal.x,
-                      y: o1 === object ? originalNormal.y : -originalNormal.y
-                    }
-                    const manifolds = otherObjectToManifolds.get(otherObject) || []
-                    manifolds.push({ normal, distance })
-                    otherObjectToManifolds.set(otherObject, manifolds)
-                  }
-                )
-            })
-          otherObjectToManifolds
-            .forEach((manifolds, otherObject) => {
-              object.collide(otherObject, manifolds)
-            })
-        })
-
-      doneCollisions.forEach((o1, o2) => o1.collide && o1.collide(o2, []))
-
       this.objects.forEach(object => object.update(dt))
       this.objects.forEach(object => object.draw())
-
       this.physics.forEachCollider(c => drawCollider(c, this.context))
 
       requestAnimationFrame(animate)
