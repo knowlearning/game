@@ -1,7 +1,9 @@
 import Rapier from '@dimforge/rapier2d-compat'
+import { distance } from './utils.js'
 
 class WalkingState {
   constructor(bug) {
+    console.log('WALKING!')
     this.bug = bug
     this.maxSpeed = Math.random() * 10 + 5
     this.acceleration = 1
@@ -17,6 +19,7 @@ class WalkingState {
 
 class TurnState {
   constructor(bug) {
+    console.log('NEW TURN!')
     this.bug = bug
     this.bug.speed = 0
     this.turnTime = Math.random() * 1000
@@ -78,7 +81,6 @@ export default class Bug {
 
     this.characterController = game.physics.createCharacterController(1)
 
-
     this.state = new WalkingState(this)
     this.collisions = new Map()
 
@@ -107,6 +109,7 @@ export default class Bug {
       const collisions = this.collisions.get(otherObect) || []
       collisions.push({ normal: collision.normal1 })
       this.collisions.set(otherObect, collisions)
+
     }
     this.collisions.forEach((collisions, otherObject) => {
       this.collide(otherObject, collisions)
@@ -126,7 +129,7 @@ export default class Bug {
     ctx.restore()
   }
   collide(otherObject, collisions) {
-    console.log('COLLISION', otherObject, collisions)
+    console.log(collisions.length)
     if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState) && collisions.length) {
         this.state = new TurnState(this)
     }

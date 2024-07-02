@@ -40,8 +40,8 @@ export default class Input {
       event.preventDefault()
       const { top, left, width, height } = game.canvas.getBoundingClientRect()
       this.pointer = {
-        x: Math.max(0, Math.min(width, event.x - left)),
-        y: Math.max(0, Math.min(height, event.y - top))
+        x: Math.round(Math.max(0, Math.min(width, event.x - left))),
+        y: Math.round(Math.max(0, Math.min(height, event.y - top)))
       }
     }, false)
 
