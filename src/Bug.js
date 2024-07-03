@@ -1,5 +1,5 @@
-import Rapier from '@dimforge/rapier2d-compat'
 import { distance } from './utils.js'
+import { Composite, Bodies } from 'matter-js'
 
 class WalkingState {
   constructor(bug) {
@@ -39,16 +39,17 @@ class DraggingState {
     this.bug = bug
     const { x, y } = bug.game.input.pointer
     this.offset = {
-      x: x - this.bug.position.x,
-      y: y - this.bug.position.y
+      x: x - this.bug.body.position.x,
+      y: y - this.bug.body.position.y
     }
   }
   update() {
-    const { x, y } = this.bug.game.input.pointer
-    this.bug.position = {
-      x: x - this.offset.x,
-      y: y - this.offset.y
-    }
+    const { pointer } = this.bug.game.input
+    const { x, y } = this.bug.body.position
+    Composite.translate(this.bug.composite, {
+      x: pointer.x - x,
+      y: pointer.y - y
+    })
   }
   draw() {}
 }
@@ -61,63 +62,38 @@ export default class Bug {
     this.image.src = '/ladybug.svg'
     this.width = 84
     this.height = 86
+    this.radius = 42
 
     this.speed = 0
     this.angle = Math.PI * 2 * Math.random()
 
-    const { x, y } = position
+    this.composite = Composite.create()
+    Composite.add(game.engine.world, [this.composite])
 
-    const rigidBodyDesc = Rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(x, y)
-    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
-
-    const colliderDesc = (
-      Rapier
-        .ColliderDesc
-        .ball(42)
-        .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
-        .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
-    )
-    this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
-
-    this.characterController = game.physics.createCharacterController(1)
+    this.body = Bodies.circle(0, 0, this.radius,  { restitution: 0, density: 0.001 })
+    Composite.add(this.composite, this.body)
+    Composite.translate(this.composite, position)
 
     this.state = new WalkingState(this)
     this.collisions = new Map()
 
+    this.game.addObject(this)
+
+    this.body.collide = (otherObject, collision) => this.collide(otherObject, collision)
+    this.body.drag = () => this.state = new DraggingState(this)
+    this.body.drop = () => this.state = new TurnState(this)
   }
   update(dt) {
     this.state.update(dt)
     const { position, speed, angle } = this
-    const desiredTranslation = {
+    Composite.translate(this.composite, {
       x: speed * Math.cos(angle),
       y: speed * Math.sin(angle)
-    }
-    this.characterController.computeColliderMovement(this.collider, desiredTranslation)
-    const correctedMovement = this.characterController.computedMovement()
-    const r = 42
-    this.position = {
-      x: Math.max(r, Math.min(this.game.canvas.width - r, position.x + correctedMovement.x)),
-      y: Math.max(r, Math.min(this.game.canvas.height - r, position.y + correctedMovement.y))
-    }
-    this.rigidBody.setNextKinematicTranslation(this.position)
-    this.rigidBody.setRotation(angle)
-
-    this.collisions = new Map()
-    for (let i = 0; i < this.characterController.numComputedCollisions(); i++) {
-      const collision = this.characterController.computedCollision(i)
-      const otherObect = this.game.objectFromColliderHandle(collision.collider.handle)
-      const collisions = this.collisions.get(otherObect) || []
-      collisions.push({ normal: collision.normal1 })
-      this.collisions.set(otherObect, collisions)
-
-    }
-    this.collisions.forEach((collisions, otherObject) => {
-      this.collide(otherObject, collisions)
     })
   }
   draw() {
     const ctx = this.game.context
-    const { x, y } = this.position
+    const { x, y } = this.body.position
     ctx.save()
     ctx.translate(x, y)
     ctx.rotate(this.angle)
@@ -128,10 +104,9 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(otherObject, collisions) {
-    console.log(collisions.length)
-    if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState) && collisions.length) {
-        this.state = new TurnState(this)
+  collide(otherObject, collision) {
+    if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState)) {
+      this.state = new TurnState(this)
     }
   }
 

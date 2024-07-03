@@ -1,5 +1,7 @@
-import Rapier from '@dimforge/rapier2d-compat'
 import { distance } from './utils.js'
+import Matter from 'matter-js'
+
+const { Engine, Render, Runner, Bodies, Body, Composite } = Matter
 
 export default class Path {
   constructor(game) {
@@ -7,8 +9,9 @@ export default class Path {
     this.path = []
     this.lineWidth = 5
 
-    const rigidBodyDesc = Rapier.RigidBodyDesc.fixed().setTranslation(0, 0)
-    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
+    this.composite = Composite.create()
+    Composite.add(game.engine.world, [this.composite])
+    this.game.addObject(this)
   }
   addPoint({ x, y }) {
     this.path.push({ x, y })
@@ -17,17 +20,12 @@ export default class Path {
       const [p1, p2] = this.path.slice(-2)
       const width = this.lineWidth
       const height = distance(p1, p2)
-      const colliderDesc = (
-        Rapier
-          .ColliderDesc
-          .cuboid(width/2, height/2)
-          .setFriction(0)
-          .setRestitution(1)
-          .setRotation(Math.atan2(p1.y-p2.y, p1.x-p2.x) + Math.PI/2)
-          .setTranslation((p1.x + p2.x)/2, (p1.y + p2.y)/2)
-          .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
-      )
-      this.collider = this.game.physics.createCollider(colliderDesc, this.rigidBody)
+      const rotation = Math.atan2(p1.y-p2.y, p1.x-p2.x) + Math.PI/2
+      const translation = { x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2 }
+      const body = Bodies.rectangle(0, 0, width, height, { isStatic: true })
+      Composite.add(this.composite, body)
+      Body.rotate(body, rotation, { x: 0, y: 0 })
+      Body.translate(body, translation)
     }
   }
   update() {}

@@ -2,107 +2,82 @@ import Input from './Input.js'
 import Pointer from './Pointer.js'
 import Bug from './Bug.js'
 import Path from './Path.js'
-import Rapier from '@dimforge/rapier2d-compat'
-
-function rigidBodyFromColliderHandle(world, handle) {
-  return world.colliders.get(handle).parent().handle
-}
+import { Engine, Render, Runner, Bodies, Composite, Events, Body } from 'matter-js'
 
 export default class Game {
-  constructor(canvas) {
-    this.canvas = canvas
-    this.context = canvas.getContext('2d')
-    const { width, height } = canvas
+  constructor(element) {
     this.objects = []
     this.input = new Input(this)
-    this.physicsHandles = new Map()
-    this.objectCollisions = new Map()
-    this.collisionManifolds = new Map()
     this.fps = 0
-  }
+    this.engine = Engine.create()
+    this.render = Render.create({
+      element,
+      engine: this.engine,
+      options: {
+        width: 800,
+        height: 600
+      }
+    })
+    this.context = this.render.canvas.getContext('2d')
+    this.engine.world.gravity.y = 0
+    this.engine.world.gravity.x = 0
 
-  async initialize() {
+    const { bounds: { max, min } } = this.render
+
+    this.border = new Path(this)
+    this.border.addPoint(min)
+    this.border.addPoint({ x: max.x, y: min.y })
+    this.border.addPoint(max)
+    this.border.addPoint({ x: min.y, y: max.y })
+    this.border.addPoint(min)
+    this.pointer = new Pointer(this)
+
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+
+    Render.run(this.render)
+    this.runner = Runner.create()
+    Runner.run(this.runner, this.engine)
+
+    Events.on(this.engine, 'collisionStart', function(event) {
+      var pairs = event.pairs
+
+      pairs.forEach(function(pair) {
+        const { bodyA, bodyB } = pair
+
+        if (bodyA.collide) bodyA.collide(bodyB)
+        if (bodyB.collide) bodyB.collide(bodyA)
+      })
+    })
+
     let lastTimestamp = 0
-
-    await Rapier.init()
-
-    const gravity = { x: 0, y: 0 }
-    this.physics = new Rapier.World(gravity)
-    this.physicsEventQueue = new Rapier.EventQueue(true)
-
-    const border = new Path(this)
-    border.addPoint({ x: 0, y: 0 })
-    border.addPoint({ x: this.canvas.width, y: 0 })
-    border.addPoint({ x: this.canvas.width, y: this.canvas.height })
-    border.addPoint({ x: 0, y: this.canvas.height })
-    border.addPoint({ x: 0, y: 0 })
-
-    this.addObject(border)
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Bug(this, this.randomPosition()))
-    this.addObject(new Pointer(this))
-
-    const animate = timestamp => {
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    const tick = timestamp => {
       const dt = timestamp - lastTimestamp
       if (dt > 0) this.fps = 1000 / dt
       lastTimestamp = timestamp
 
-      const objectsWithCollisionEvents = new Set()
-      const doneCollisions = new Map()
-
-      this.physics.step(this.physicsEventQueue)
-      this.objects.forEach(object => object.update(dt))
-      this.objects.forEach(object => object.draw())
-      this.physics.forEachCollider(c => drawCollider(c, this.context))
-
-      requestAnimationFrame(animate)
+      requestAnimationFrame(tick)
+      this.objects.forEach(object => {
+        object.update(dt)
+        object.draw(dt)
+      })
     }
-    animate(0)
-  }
-
-  objectFromColliderHandle(handle) {
-    return this.physicsHandles.get(rigidBodyFromColliderHandle(this.physics, handle))
+    tick()
   }
 
   addObject(object) {
-    if (object.rigidBody) {
-      this.physicsHandles.set(object.rigidBody.handle, object)
-    }
     this.objects.push(object)
-    this.objectCollisions.set(object, new Set())
   }
 
   randomPosition() {
     return {
-      x: Math.floor(Math.random() * this.canvas.width),
-      y: Math.floor(Math.random() * this.canvas.height)
+      x: Math.floor(Math.random() * this.render.canvas.width),
+      y: Math.floor(Math.random() * this.render.canvas.height)
     }
   }
-}
-
-// Function to draw the collider
-function drawCollider(collider, ctx) {
-  const shape = collider.shape;
-
-  ctx.save();
-  ctx.beginPath();
-  if (shape.type === 0) {
-    const radius = shape.radius
-    const position = collider.translation()
-    ctx.arc(position.x, position.y, radius, 0, 2 * Math.PI)
-  } else if (shape.type === 1) {
-    const halfExtents = shape.halfExtents
-    const position = collider.translation()
-    const rotation = collider.rotation()
-
-    ctx.translate(position.x, position.y)
-    ctx.rotate(rotation)
-    ctx.rect(-halfExtents.x, -halfExtents.y, halfExtents.x * 2, halfExtents.y * 2)
-  }
-  else console.log('UNKNOWN SHAPE!', shape)
-  // Add more shape types if needed
-
-  ctx.stroke();
-  ctx.restore();
 }
