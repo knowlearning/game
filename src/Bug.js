@@ -39,16 +39,17 @@ class DraggingState {
     this.bug = bug
     const { x, y } = bug.game.input.pointer
     this.offset = {
-      x: x - this.bug.position.x,
-      y: y - this.bug.position.y
+      x: x - this.bug.body.position.x,
+      y: y - this.bug.body.position.y
     }
   }
   update() {
-    const { x, y } = this.bug.game.input.pointer
-    this.bug.position = {
-      x: x - this.offset.x,
-      y: y - this.offset.y
-    }
+    const { pointer } = this.bug.game.input
+    const { x, y } = this.bug.body.position
+    Composite.translate(this.bug.composite, {
+      x: pointer.x - x,
+      y: pointer.y - y
+    })
   }
   draw() {}
 }
@@ -78,6 +79,9 @@ export default class Bug {
 
     this.game.addObject(this)
 
+    this.body.collide = (otherObject, collision) => this.collide(otherObject, collision)
+    this.body.drag = () => this.state = new DraggingState(this)
+    this.body.drop = () => this.state = new TurnState(this)
   }
   update(dt) {
     this.state.update(dt)
@@ -100,10 +104,9 @@ export default class Bug {
     )
     ctx.restore()
   }
-  collide(otherObject, collisions) {
-    console.log(collisions.length)
-    if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState) && collisions.length) {
-        this.state = new TurnState(this)
+  collide(otherObject, collision) {
+    if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState)) {
+      this.state = new TurnState(this)
     }
   }
 

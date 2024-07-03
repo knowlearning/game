@@ -2,13 +2,7 @@ import Input from './Input.js'
 import Pointer from './Pointer.js'
 import Bug from './Bug.js'
 import Path from './Path.js'
-import Matter from 'matter-js'
-
-const { Engine, Render, Runner, Bodies, Composite } = Matter
-
-function rigidBodyFromColliderHandle(world, handle) {
-  return world.colliders.get(handle).parent().handle
-}
+import { Engine, Render, Runner, Bodies, Composite, Events, Body } from 'matter-js'
 
 export default class Game {
   constructor(element) {
@@ -39,12 +33,29 @@ export default class Game {
     this.pointer = new Pointer(this)
 
     new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
+    new Bug(this, this.randomPosition())
 
     Render.run(this.render)
     this.runner = Runner.create()
     Runner.run(this.runner, this.engine)
 
-   let lastTimestamp = 0
+    Events.on(this.engine, 'collisionStart', function(event) {
+      var pairs = event.pairs
+
+      pairs.forEach(function(pair) {
+        const { bodyA, bodyB } = pair
+
+        if (bodyA.collide) bodyA.collide(bodyB)
+        if (bodyB.collide) bodyB.collide(bodyA)
+      })
+    })
+
+    let lastTimestamp = 0
     const tick = timestamp => {
       const dt = timestamp - lastTimestamp
       if (dt > 0) this.fps = 1000 / dt
@@ -52,15 +63,11 @@ export default class Game {
 
       requestAnimationFrame(tick)
       this.objects.forEach(object => {
-        object.update()
-        object.draw()
+        object.update(dt)
+        object.draw(dt)
       })
     }
     tick()
-  }
-
-  objectFromColliderHandle(handle) {
-    return this.physicsHandles.get(rigidBodyFromColliderHandle(this.physics, handle))
   }
 
   addObject(object) {
@@ -73,30 +80,4 @@ export default class Game {
       y: Math.floor(Math.random() * this.render.canvas.height)
     }
   }
-}
-
-// Function to draw the collider
-function drawCollider(collider, ctx) {
-  const shape = collider.shape;
-
-  ctx.save();
-  ctx.beginPath();
-  if (shape.type === 0) {
-    const radius = shape.radius
-    const position = collider.translation()
-    ctx.arc(position.x, position.y, radius, 0, 2 * Math.PI)
-  } else if (shape.type === 1) {
-    const halfExtents = shape.halfExtents
-    const position = collider.translation()
-    const rotation = collider.rotation()
-
-    ctx.translate(position.x, position.y)
-    ctx.rotate(rotation)
-    ctx.rect(-halfExtents.x, -halfExtents.y, halfExtents.x * 2, halfExtents.y * 2)
-  }
-  else console.log('UNKNOWN SHAPE!', shape)
-  // Add more shape types if needed
-
-  ctx.stroke();
-  ctx.restore();
 }

@@ -1,4 +1,4 @@
-import Rapier from '@dimforge/rapier2d-compat'
+import { Composite, Query } from 'matter-js'
 import Path from './Path.js'
 
 class HoverState {
@@ -47,7 +47,7 @@ class DragState {
   }
   update() {
     if (!this.pointer.game.input.keys.mouseleft) {
-      this.object.dragEnd()
+      this.object.drop()
       this.pointer.state = new HoverState(this.pointer)
     }
     else {
@@ -69,6 +69,13 @@ class DragState {
   }
 }
 
+function getBodyAtPosition(world, position) {
+  const bodies = Composite.allBodies(world)
+  const foundBodies = Query.point(bodies, position)
+  return foundBodies.length > 0 ? foundBodies[0] : null
+}
+
+
 export default class Pointer {
   constructor(game) {
     this.game = game
@@ -77,7 +84,10 @@ export default class Pointer {
   }
   update() {
     if (this.game.input.keys.mouseleft && this.state instanceof HoverState) {
-      //  TODO: swap to drag state if pointer is on object....
+      const body = getBodyAtPosition(this.game.engine.world, this.game.input.pointer)
+      if (body?.drag) {
+        this.state = new DragState(this, body)
+      }
     }
     this.state.update()
   }
