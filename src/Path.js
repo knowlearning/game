@@ -11,7 +11,6 @@ export default class Path {
 
     this.composite = Composite.create()
     Composite.add(game.engine.world, [this.composite])
-    console.log('ADDING PATH!!!!!!!!')
     this.game.addObject(this)
   }
   addPoint({ x, y }) {

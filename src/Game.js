@@ -25,6 +25,8 @@ export default class Game {
       }
     })
     this.context = this.render.canvas.getContext('2d')
+    this.engine.world.gravity.y = 0
+    this.engine.world.gravity.x = 0
 
     const { bounds: { max, min } } = this.render
 
@@ -36,11 +38,18 @@ export default class Game {
     this.border.addPoint(min)
     this.pointer = new Pointer(this)
 
+    new Bug(this, this.randomPosition())
+
     Render.run(this.render)
     this.runner = Runner.create()
     Runner.run(this.runner, this.engine)
 
+   let lastTimestamp = 0
     const tick = timestamp => {
+      const dt = timestamp - lastTimestamp
+      if (dt > 0) this.fps = 1000 / dt
+      lastTimestamp = timestamp
+
       requestAnimationFrame(tick)
       this.objects.forEach(object => {
         object.update()
@@ -60,8 +69,8 @@ export default class Game {
 
   randomPosition() {
     return {
-      x: Math.floor(Math.random() * this.canvas.width),
-      y: Math.floor(Math.random() * this.canvas.height)
+      x: Math.floor(Math.random() * this.render.canvas.width),
+      y: Math.floor(Math.random() * this.render.canvas.height)
     }
   }
 }

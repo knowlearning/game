@@ -1,5 +1,5 @@
-import Rapier from '@dimforge/rapier2d-compat'
 import { distance } from './utils.js'
+import { Composite, Bodies } from 'matter-js'
 
 class WalkingState {
   constructor(bug) {
@@ -61,63 +61,35 @@ export default class Bug {
     this.image.src = '/ladybug.svg'
     this.width = 84
     this.height = 86
+    this.radius = 42
 
     this.speed = 0
     this.angle = Math.PI * 2 * Math.random()
 
-    const { x, y } = position
+    this.composite = Composite.create()
+    Composite.add(game.engine.world, [this.composite])
 
-    const rigidBodyDesc = Rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(x, y)
-    this.rigidBody = game.physics.createRigidBody(rigidBodyDesc)
-
-    const colliderDesc = (
-      Rapier
-        .ColliderDesc
-        .ball(42)
-        .setActiveEvents(Rapier.ActiveEvents.COLLISION_EVENTS)
-        .setActiveCollisionTypes(Rapier.ActiveCollisionTypes.ALL)
-    )
-    this.collider = game.physics.createCollider(colliderDesc, this.rigidBody)
-
-    this.characterController = game.physics.createCharacterController(1)
+    this.body = Bodies.circle(0, 0, this.radius,  { restitution: 0, density: 0.001 })
+    Composite.add(this.composite, this.body)
+    Composite.translate(this.composite, position)
 
     this.state = new WalkingState(this)
     this.collisions = new Map()
+
+    this.game.addObject(this)
 
   }
   update(dt) {
     this.state.update(dt)
     const { position, speed, angle } = this
-    const desiredTranslation = {
+    Composite.translate(this.composite, {
       x: speed * Math.cos(angle),
       y: speed * Math.sin(angle)
-    }
-    this.characterController.computeColliderMovement(this.collider, desiredTranslation)
-    const correctedMovement = this.characterController.computedMovement()
-    const r = 42
-    this.position = {
-      x: Math.max(r, Math.min(this.game.canvas.width - r, position.x + correctedMovement.x)),
-      y: Math.max(r, Math.min(this.game.canvas.height - r, position.y + correctedMovement.y))
-    }
-    this.rigidBody.setNextKinematicTranslation(this.position)
-    this.rigidBody.setRotation(angle)
-
-    this.collisions = new Map()
-    for (let i = 0; i < this.characterController.numComputedCollisions(); i++) {
-      const collision = this.characterController.computedCollision(i)
-      const otherObect = this.game.objectFromColliderHandle(collision.collider.handle)
-      const collisions = this.collisions.get(otherObect) || []
-      collisions.push({ normal: collision.normal1 })
-      this.collisions.set(otherObect, collisions)
-
-    }
-    this.collisions.forEach((collisions, otherObject) => {
-      this.collide(otherObject, collisions)
     })
   }
   draw() {
     const ctx = this.game.context
-    const { x, y } = this.position
+    const { x, y } = this.body.position
     ctx.save()
     ctx.translate(x, y)
     ctx.rotate(this.angle)
