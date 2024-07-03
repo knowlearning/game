@@ -3,7 +3,7 @@ export default class Input {
     this.keys = {}
     this.pointer = { x: 0, y: 0 }
 
-    game.canvas.addEventListener('contextmenu', event => event.preventDefault())
+    window.addEventListener('contextmenu', event => event.preventDefault())
 
     window.addEventListener('mousedown', event => {
       event.preventDefault()
@@ -38,10 +38,15 @@ export default class Input {
 
     window.addEventListener('mousemove', event => {
       event.preventDefault()
-      const { top, left, width, height } = game.canvas.getBoundingClientRect()
+      const { canvas } = game.render
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+
+      // TODO: consider clamping pointer to viewport boundaries
       this.pointer = {
-        x: Math.round(Math.max(0, Math.min(width, event.x - left))),
-        y: Math.round(Math.max(0, Math.min(height, event.y - top)))
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
       }
     }, false)
 

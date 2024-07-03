@@ -6,7 +6,7 @@
   const CANVAS_HEIGHT = 600
   const METRICS_SAMPLE_RATE = 10
 
-  const myCanvas = ref(null)
+  const viewport = ref(null)
   const fps = ref(0)
   const pointer = ref({ x: 0, y: 0 })
   const keys = ref({})
@@ -14,12 +14,7 @@
   const FPSSamples = []
 
   onMounted(() => {
-    const canvas = myCanvas.value
-    canvas.width = CANVAS_WIDTH
-    canvas.height = CANVAS_HEIGHT
-
-    const game = new Game(canvas)
-    game.initialize()
+    const game = new Game(viewport.value)
 
     const sampleGameMetrics = () => {
       FPSSamples.push(game.fps)
@@ -35,7 +30,7 @@
 </script>
 
 <template>
-  <canvas ref="myCanvas" />
+  <div ref="viewport"></div>
   <pre>FPS: {{ fps }}
 Pointer: {{ pointer.x }}, {{ pointer.y }}
 Keys: {{ keys }}
@@ -43,13 +38,15 @@ Keys: {{ keys }}
 </template>
 
 <style scoped>
-  canvas {
-    width: 800px;
-    height: 600px;
+  div {
+    width: 100vw;
+    height: 100vh;
+  }
+
+  pre,
+  div {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: palegoldenrod;
+    top: 0;
+    left: 0;
   }
 </style>

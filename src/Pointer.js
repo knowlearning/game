@@ -7,6 +7,7 @@ class HoverState {
   }
   update() {
     if (this.pointer.game.input.keys.mouseleft) {
+      console.log(this.pointer)
       this.pointer.state = new DrawState(this.pointer)
     }
   }
@@ -24,6 +25,7 @@ class DrawState {
     this.pointer = pointer
     this.path = new Path(this.pointer.game)
     this.pointer.game.addObject(this.path)
+    console.log(this.pointer.game.input.pointer)
     this.path.addPoint(this.pointer.game.input.pointer)
   }
   update() {
@@ -71,20 +73,14 @@ class DragState {
 
 export default class Pointer {
   constructor(game) {
+    console.log('POINTER CREATED!!!!!!!!!!!!!!!')
     this.game = game
     this.state = new HoverState(this)
+    this.game.addObject(this)
   }
   update() {
     if (this.game.input.keys.mouseleft && this.state instanceof HoverState) {
-      const projection = this.game.physics.projectPoint(this.game.input.pointer, true)
-      if (projection?.collider && projection.isInside) {
-        const obj = this.game.objectFromColliderHandle(projection.collider.handle)
-        if (obj.dragStart) {
-          console.log(projection.collider.handle, obj)
-          obj.dragStart(this.game.input.pointer)
-          this.state = new DragState(this, obj)
-        }
-      }
+      //  TODO: swap to drag state if pointer is on object....
     }
     this.state.update()
   }
