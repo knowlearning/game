@@ -3,7 +3,6 @@ import { Composite, Bodies } from 'matter-js'
 
 class WalkingState {
   constructor(bug) {
-    console.log('WALKING!')
     this.bug = bug
     this.maxSpeed = Math.random() * 10 + 5
     this.acceleration = 1
@@ -19,7 +18,6 @@ class WalkingState {
 
 class TurnState {
   constructor(bug) {
-    console.log('NEW TURN!')
     this.bug = bug
     this.bug.speed = 0
     this.turnTime = Math.random() * 1000
@@ -74,12 +72,13 @@ export default class Bug {
     Composite.add(this.composite, this.body)
     Composite.translate(this.composite, position)
 
-    this.state = new WalkingState(this)
     this.collisions = new Map()
+    this.state = new WalkingState(this)
 
     this.game.addObject(this)
 
     this.body.collide = (otherObject, collision) => this.collide(otherObject, collision)
+    this.body.leave = (otherObject) => this.leave(otherObject)
     this.body.drag = () => this.state = new DraggingState(this)
     this.body.drop = () => this.state = new TurnState(this)
   }
@@ -105,16 +104,12 @@ export default class Bug {
     ctx.restore()
   }
   collide(otherObject, collision) {
+    this.collisions.set(otherObject, collision)
     if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState)) {
       this.state = new TurnState(this)
     }
   }
-
-  dragStart(position) {
-    this.state = new DraggingState(this)
-  }
-  drag(delta) {}
-  dragEnd() {
-    this.state = new WalkingState(this)
+  leave(otherObject) {
+    this.collisions.delete(otherObject)
   }
 }

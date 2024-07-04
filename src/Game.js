@@ -38,7 +38,6 @@ export default class Game {
     new Bug(this, this.randomPosition())
     new Bug(this, this.randomPosition())
     new Bug(this, this.randomPosition())
-    new Bug(this, this.randomPosition())
 
     Render.run(this.render)
     this.runner = Runner.create()
@@ -50,8 +49,26 @@ export default class Game {
       pairs.forEach(function(pair) {
         const { bodyA, bodyB } = pair
 
-        if (bodyA.collide) bodyA.collide(bodyB)
-        if (bodyB.collide) bodyB.collide(bodyA)
+        var overlap = pair.collision.penetration
+
+        const negOverlap = {
+            x: -overlap.x,
+            y: -overlap.y
+        }
+
+        if (bodyA.collide) bodyA.collide(bodyB, { overlap })
+        if (bodyB.collide) bodyB.collide(bodyA, { overlap: negOverlap})
+      })
+    })
+
+    Events.on(this.engine, 'collisionEnd', function(event) {
+      var pairs = event.pairs
+
+      pairs.forEach(function(pair) {
+        const { bodyA, bodyB } = pair
+
+        if (bodyA.leave) bodyA.leave(bodyB)
+        if (bodyB.leave) bodyB.leave(bodyA)
       })
     })
 
@@ -67,7 +84,7 @@ export default class Game {
         object.draw(dt)
       })
     }
-    tick()
+    tick(0)
   }
 
   addObject(object) {
