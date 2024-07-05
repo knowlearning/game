@@ -49,4 +49,7 @@ Keys: {{ keys }}
     top: 0;
     left: 0;
   }
+  pre {
+    color: #AAAAAA;
+  }
 </style>

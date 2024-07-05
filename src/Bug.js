@@ -78,17 +78,24 @@ export default class Bug {
     this.game.addObject(this)
 
     this.body.collide = (otherObject, collision) => this.collide(otherObject, collision)
+    this.body.blocked = () => this.blocked()
     this.body.leave = (otherObject) => this.leave(otherObject)
     this.body.drag = () => this.state = new DraggingState(this)
     this.body.drop = () => this.state = new TurnState(this)
+    this.expectedPosition = position
   }
   update(dt) {
+    const { speed, angle, collisions, expectedPosition } = this
+    const { position } = this.body
+    if (distance(expectedPosition, position) > 1 && collisions.size > 0) {
+      this.body.blocked()
+    }
     this.state.update(dt)
-    const { position, speed, angle } = this
-    Composite.translate(this.composite, {
-      x: speed * Math.cos(angle),
-      y: speed * Math.sin(angle)
-    })
+    const dx = speed * Math.cos(angle)
+    const dy = speed * Math.sin(angle)
+    Composite.translate(this.composite, { x: dx, y: dy })
+    expectedPosition.x = position.x + dx
+    expectedPosition.y = position.y + dy
   }
   draw() {
     const ctx = this.game.context
@@ -106,6 +113,11 @@ export default class Bug {
   collide(otherObject, collision) {
     this.collisions.set(otherObject, collision)
     if (!(this.state instanceof DraggingState) &&  !(this.state instanceof TurnState)) {
+      this.state = new TurnState(this)
+    }
+  }
+  blocked() {
+    if (!(this.state instanceof DraggingState)) {
       this.state = new TurnState(this)
     }
   }
