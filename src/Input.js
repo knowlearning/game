@@ -45,8 +45,8 @@ export default class Input {
 
       // TODO: consider clamping pointer to viewport boundaries
       this.pointer = {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY
+        x: Math.round((event.clientX - rect.left) * scaleX),
+        y: Math.round((event.clientY - rect.top) * scaleY)
       }
     }, false)
 
